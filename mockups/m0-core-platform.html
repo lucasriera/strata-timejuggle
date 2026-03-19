@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M0 — Core Platform · StrataPMS</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Login screen */
+.login-screen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, var(--neon-blue) 0%, var(--deep-violet) 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  transition: opacity 0.3s;
+}
+.login-screen.hidden { opacity: 0; pointer-events: none; }
+.login-card {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  width: 360px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(16,7,160,0.3);
+}
+.login-logo { font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 800; color: var(--neon-blue); margin-bottom: 4px; }
+.login-sub  { font-size: 13px; color: var(--cool-grey); margin-bottom: 28px; }
+.google-btn {
+  width: 100%;
+  height: 44px;
+  border: 1px solid var(--light-silver);
+  border-radius: 8px;
+  background: white;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 14px; font-weight: 500; color: #1a1a2e;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.google-btn:hover { background: var(--bg); }
+.google-icon { width: 20px; height: 20px; }
+.login-note { font-size: 11px; color: var(--cool-grey); margin-top: 16px; }
+.login-domain { color: var(--neon-blue); font-weight: 600; }
+
+/* User row */
+.user-row { display: flex; align-items: center; gap: 10px; }
+.avatar-md {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--bleu-france), var(--amethyst));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 12px; font-weight: 600; flex-shrink: 0;
+}
+.user-name { font-weight: 500; color: #1a1a2e; font-size: 13px; }
+.user-email { font-size: 11px; color: var(--cool-grey); }
+
+/* Tier badge */
+.tier-super { background: #1a1a2e; color: white; }
+.tier-admin { background: var(--neon-blue); color: white; }
+.tier-finance { background: var(--amethyst); color: white; }
+.tier-manager { background: var(--bleu-france); color: white; }
+.tier-po { background: var(--sky-blue); color: white; }
+.tier-tl { background: var(--ocean-blue); color: white; }
+.tier-collab { background: #e3f0ff; color: var(--bleu-france); }
+.tier-viewer { background: #f0f1f5; color: var(--cool-grey); }
+
+/* Catalog items */
+.catalog-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f1f5;
+}
+.catalog-item:last-child { border-bottom: none; }
+.catalog-name { font-size: 13px; font-weight: 500; color: #1a1a2e; }
+.catalog-meta { font-size: 11px; color: var(--cool-grey); }
+
+/* Audit */
+.audit-row { display: flex; gap: 16px; align-items: flex-start; padding: 12px 14px; border-bottom: 1px solid #f0f1f5; }
+.audit-row:last-child { border-bottom: none; }
+.audit-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+.audit-icon.create { background: #e8f5e9; color: #27ae60; }
+.audit-icon.update { background: #e3f0ff; color: var(--bleu-france); }
+.audit-icon.delete { background: #fdecea; color: #e74c3c; }
+.audit-icon.login  { background: #e8eeff; color: var(--neon-blue); }
+.audit-content { flex: 1; }
+.audit-title { font-size: 13px; color: #1a1a2e; }
+.audit-detail { font-size: 11px; color: var(--cool-grey); margin-top: 2px; }
+.audit-time { font-size: 11px; color: var(--cool-grey); white-space: nowrap; }
+
+/* Notification */
+.notif-item { padding: 12px 16px; border-bottom: 1px solid #f0f1f5; display: flex; gap: 10px; align-items: flex-start; }
+.notif-item.unread { background: #f6f8ff; }
+.notif-dot-sm { width: 8px; height: 8px; border-radius: 50%; background: var(--bleu-france); flex-shrink: 0; margin-top: 4px; }
+.notif-text { font-size: 13px; color: #1a1a2e; }
+.notif-time { font-size: 11px; color: var(--cool-grey); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">STRATA</div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:2px;color:var(--cool-grey);margin-bottom:20px;">PMS TIMEJUGGLE 2.0</div>
+    <div class="login-sub">Acceso restringido al equipo interno</div>
+    <button class="google-btn" onclick="document.getElementById('loginScreen').classList.add('hidden')">
+      <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Ingresar con Google
+    </button>
+    <div class="login-note">Solo cuentas <span class="login-domain">@strata-analytics.us</span></div>
+  </div>
+</div>
+
+<!-- App Shell -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div>
+      <span>STRATA</span>
+      <span class="logo-sub">PMS TimeJuggle 2.0</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Sistema</div>
+    <a href="#" class="sidebar-item active" onclick="showTab('users')">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+      Usuarios
+    </a>
+    <a href="#" class="sidebar-item" onclick="showTab('catalogs')">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
+      Catálogos
+    </a>
+    <a href="#" class="sidebar-item" onclick="showTab('audit')">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+      Audit Log
+    </a>
+    <a href="#" class="sidebar-item" onclick="showTab('notifications')">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+      Notificaciones
+      <span class="item-badge">3</span>
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Módulos</div>
+    <a href="../m1-colaboradores.html" class="sidebar-item">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      M1 Colaboradores
+    </a>
+    <a href="m2-project-registry.html" class="sidebar-item">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+      M2 Proyectos
+    </a>
+    <a href="../m3-demand-planning-mockup.html" class="sidebar-item">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z"/></svg>
+      M3 Demand Planning
+    </a>
+    <a href="m4-timejuggle.html" class="sidebar-item">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+      M4 TimeJuggle
+    </a>
+    <a href="m6-billing.html" class="sidebar-item">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+      M6 Billing
+    </a>
+    <a href="m7-kpis.html" class="sidebar-item">
+      <svg class="sidebar-icon" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+      M7 KPIs
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="avatar-sm">SA</div>
+    <div class="avatar-info">
+      <div class="avatar-name">Superadmin</div>
+      <div class="avatar-role">SUPERADMIN</div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-breadcrumb"><span>M0</span> / Core Platform</div>
+      <div class="topbar-title" id="topbarTitle">Gestión de Usuarios</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="notif-btn"><div class="notif-dot"></div>🔔</div>
+      <div class="avatar-sm" style="cursor:pointer">SA</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- TAB: USERS -->
+    <div id="tab-users" class="tab-content active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Gestión de Usuarios</div>
+          <div class="page-subtitle">8 tiers de acceso · RBAC 3 niveles</div>
+        </div>
+        <button class="btn btn-primary">+ Invitar usuario</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card stat-accent-blue">
+          <div class="stat-label">Total usuarios</div>
+          <div class="stat-value">47</div>
+          <div class="stat-delta neutral">Activos en el sistema</div>
+        </div>
+        <div class="stat-card stat-accent-sky">
+          <div class="stat-label">Admins</div>
+          <div class="stat-value">4</div>
+          <div class="stat-delta neutral">SUPERADMIN + ADMIN</div>
+        </div>
+        <div class="stat-card stat-accent-amethyst">
+          <div class="stat-label">Colaboradores</div>
+          <div class="stat-value">38</div>
+          <div class="stat-delta up">+3 este mes</div>
+        </div>
+        <div class="stat-card stat-accent-ocean">
+          <div class="stat-label">Con override activo</div>
+          <div class="stat-value">5</div>
+          <div class="stat-delta neutral">Excepciones de módulo</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active">Todos (47)</div>
+        <div class="tab">Activos (44)</div>
+        <div class="tab">Inactivos (3)</div>
+        <div class="tab">Con overrides</div>
+      </div>
+
+      <div class="table-wrapper">
+        <div class="table-toolbar">
+          <input class="search-input" placeholder="🔍  Buscar por nombre o email…" value="">
+          <select class="filter-select">
+            <option>Todos los tiers</option>
+            <option>SUPERADMIN</option><option>ADMIN</option><option>FINANCE</option>
+            <option>MANAGER_EL</option><option>PO</option><option>TECH_LEAD</option>
+            <option>COLLABORATOR</option><option>VIEWER</option>
+          </select>
+          <select class="filter-select">
+            <option>Todas las áreas</option>
+            <option>Datos & Analytics</option><option>Cloud</option>
+            <option>Consultoría</option><option>Operaciones</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" style="margin-left:auto">Exportar</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Tier</th>
+              <th>Área</th>
+              <th>Seniority</th>
+              <th>Override módulo</th>
+              <th>Último acceso</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="user-row"><div class="avatar-md">LR</div><div><div class="user-name">Lucas Rodríguez</div><div class="user-email">lucas@strata-analytics.us</div></div></div></td>
+              <td><span class="badge tier-super">SUPERADMIN</span></td>
+              <td>Dirección</td>
+              <td>Principal</td>
+              <td><span class="badge badge-grey">—</span></td>
+              <td class="text-sm">Hoy 10:22</td>
+              <td><span class="badge badge-green">Activo</span></td>
+              <td><button class="btn btn-secondary btn-sm">Editar</button></td>
+            </tr>
+            <tr>
+              <td><div class="user-row"><div class="avatar-md" style="background:linear-gradient(135deg,#9063cd,#320073)">CM</div><div><div class="user-name">Carolina Manzano</div><div class="user-email">carolina@strata-analytics.us</div></div></div></td>
+              <td><span class="badge tier-finance">FINANCE</span></td>
+              <td>Finanzas</td>
+              <td>Senior</td>
+              <td><span class="badge badge-violet">M6 EDITOR</span></td>
+              <td class="text-sm">Hoy 09:15</td>
+              <td><span class="badge badge-green">Activo</span></td>
+              <td><button class="btn btn-secondary btn-sm">Editar</button></td>
+            </tr>
+            <tr>
+              <td><div class="user-row"><div class="avatar-md" style="background:linear-gradient(135deg,#307fe2,#5f93dc)">AG</div><div><div class="user-name">Alejandro García</div><div class="user-email">alejandro@strata-analytics.us</div></div></div></td>
+              <td><span class="badge tier-manager">MANAGER_EL</span></td>
+              <td>Cloud</td>
+              <td>Senior</td>
+              <td><span class="badge badge-grey">—</span></td>
+              <td class="text-sm">Ayer 18:44</td>
+              <td><span class="badge badge-green">Activo</span></td>
+              <td><button class="btn btn-secondary btn-sm">Editar</button></td>
+            </tr>
+            <tr>
+              <td><div class="user-row"><div class="avatar-md" style="background:linear-gradient(135deg,#4f4cb1,#1007a0)">MP</div><div><div class="user-name">María Pérez</div><div class="user-email">maria@strata-analytics.us</div></div></div></td>
+              <td><span class="badge tier-po">PO</span></td>
+              <td>Consultoría</td>
+              <td>Mid</td>
+              <td><span class="badge badge-grey">—</span></td>
+              <td class="text-sm">Hace 2 días</td>
+              <td><span class="badge badge-green">Activo</span></td>
+              <td><button class="btn btn-secondary btn-sm">Editar</button></td>
+            </tr>
+            <tr>
+              <td><div class="user-row"><div class="avatar-md" style="background:linear-gradient(135deg,#5f93dc,#307fe2)">JT</div><div><div class="user-name">Juan Torres</div><div class="user-email">juan@strata-analytics.us</div></div></div></td>
+              <td><span class="badge tier-tl">TECH_LEAD</span></td>
+              <td>Datos & Analytics</td>
+              <td>Senior</td>
+              <td><span class="badge badge-sky">M3 EDITOR</span></td>
+              <td class="text-sm">Hoy 11:30</td>
+              <td><span class="badge badge-green">Activo</span></td>
+              <td><button class="btn btn-secondary btn-sm">Editar</button></td>
+            </tr>
+            <tr>
+              <td><div class="user-row"><div class="avatar-md" style="background:#e3f0ff;color:var(--bleu-france)">RL</div><div><div class="user-name">Rosa López</div><div class="user-email">rosa@strata-analytics.us</div></div></div></td>
+              <td><span class="badge tier-collab">COLLABORATOR</span></td>
+              <td>Cloud</td>
+              <td>Junior</td>
+              <td><span class="badge badge-grey">—</span></td>
+              <td class="text-sm">Hace 3 días</td>
+              <td><span class="badge badge-green">Activo</span></td>
+              <td><button class="btn btn-secondary btn-sm">Editar</button></td>
+            </tr>
+            <tr>
+              <td><div class="user-row"><div class="avatar-md" style="background:#f0f1f5;color:var(--cool-grey)">PC</div><div><div class="user-name">Pedro Castillo</div><div class="user-email">pedro@strata-analytics.us</div></div></div></td>
+              <td><span class="badge tier-viewer">VIEWER</span></td>
+              <td>Operaciones</td>
+              <td>Junior</td>
+              <td><span class="badge badge-grey">—</span></td>
+              <td class="text-sm">Hace 1 semana</td>
+              <td><span class="badge badge-amber">Inactivo</span></td>
+              <td><button class="btn btn-secondary btn-sm">Editar</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:24px">
+        <div class="card">
+          <div class="card-title">Matriz RBAC — Permisos por Tier</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Tier</th><th>M0 Config</th><th>M1 Colabs</th><th>M2 Proyectos</th><th>M3 Demand</th><th>M4 TimeJuggle</th><th>M5 PM</th><th>M6 Billing</th><th>M7 KPIs</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="badge tier-super">SUPERADMIN</span></td><td><span class="badge badge-blue">FULL</span></td><td><span class="badge badge-blue">FULL</span></td><td><span class="badge badge-blue">FULL</span></td><td><span class="badge badge-blue">FULL</span></td><td><span class="badge badge-blue">FULL</span></td><td><span class="badge badge-blue">FULL</span></td><td><span class="badge badge-blue">FULL</span></td><td><span class="badge badge-blue">FULL</span></td></tr>
+              <tr><td><span class="badge tier-admin">ADMIN</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-green">VIEWER</span></td></tr>
+              <tr><td><span class="badge tier-finance">FINANCE</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-green">VIEWER</span></td><td><span class="badge badge-green">VIEWER</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-green">VIEWER</span></td></tr>
+              <tr><td><span class="badge tier-manager">MANAGER_EL</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-green">VIEWER</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-green">VIEWER</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-green">VIEWER</span></td><td><span class="badge badge-green">VIEWER</span></td></tr>
+              <tr><td><span class="badge tier-collab">COLLABORATOR</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-green">VIEWER*</span></td><td><span class="badge badge-sky">EDITOR</span></td><td><span class="badge badge-green">VIEWER</span></td><td><span class="badge badge-grey">NONE</span></td><td><span class="badge badge-grey">NONE</span></td></tr>
+            </tbody>
+          </table>
+          <div style="font-size:11px;color:var(--cool-grey);margin-top:10px">* COLLABORATOR en M3 solo ve su propia fila</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CATALOGS -->
+    <div id="tab-catalogs" class="tab-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Catálogos</div>
+          <div class="page-subtitle">Valores configurables por Superadmin</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-title">Áreas de trabajo <button class="btn btn-secondary btn-sm" style="float:right">+ Agregar</button></div>
+            <div class="catalog-item"><div><div class="catalog-name">Datos & Analytics</div><div class="catalog-meta">14 colaboradores</div></div><div><span class="badge badge-green">Activa</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Cloud & Infraestructura</div><div class="catalog-meta">11 colaboradores</div></div><div><span class="badge badge-green">Activa</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Consultoría</div><div class="catalog-meta">8 colaboradores</div></div><div><span class="badge badge-green">Activa</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Operaciones</div><div class="catalog-meta">5 colaboradores</div></div><div><span class="badge badge-green">Activa</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Dirección</div><div class="catalog-meta">3 colaboradores</div></div><div><span class="badge badge-green">Activa</span></div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <div class="card-title">Niveles de seniority <button class="btn btn-secondary btn-sm" style="float:right">+ Agregar</button></div>
+            <div class="catalog-item"><div><div class="catalog-name">Principal</div><div class="catalog-meta">RP base: 40 pts/quincena</div></div><div><button class="btn btn-secondary btn-sm">Editar</button></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Senior</div><div class="catalog-meta">RP base: 32 pts/quincena</div></div><div><button class="btn btn-secondary btn-sm">Editar</button></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Mid</div><div class="catalog-meta">RP base: 24 pts/quincena</div></div><div><button class="btn btn-secondary btn-sm">Editar</button></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Junior</div><div class="catalog-meta">RP base: 16 pts/quincena</div></div><div><button class="btn btn-secondary btn-sm">Editar</button></div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <div class="card-title">Tipos de proyecto <button class="btn btn-secondary btn-sm" style="float:right">+ Agregar</button></div>
+            <div class="catalog-item"><div><div class="catalog-name">Servicio Billable</div><div class="catalog-meta">Factura al cliente</div></div><div><span class="badge badge-green">Activo</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Proyecto Interno</div><div class="catalog-meta">No billable</div></div><div><span class="badge badge-green">Activo</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Licencias / Software</div><div class="catalog-meta">Desarrollo para venta</div></div><div><span class="badge badge-green">Activo</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Vacaciones</div><div class="catalog-meta">Código: STRA-VACL</div></div><div><span class="badge badge-green">Activo</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Capacitación</div><div class="catalog-meta">Código: STRA-TCERT</div></div><div><span class="badge badge-green">Activo</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-title">Entidades de facturación</div>
+            <div class="catalog-item"><div><div class="catalog-name">Strata Analytics Panamá</div><div class="catalog-meta">USD · Impuesto: ITBMS (7%)</div></div><div><span class="badge badge-green">Activa</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Strata Analytics USA</div><div class="catalog-meta">USD · Impuesto: Sales Tax (variable)</div></div><div><span class="badge badge-green">Activa</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Strata Analytics Argentina</div><div class="catalog-meta">ARS · Impuesto: IVA (21%)</div></div><div><span class="badge badge-green">Activa</span></div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <div class="card-title">Clientes</div>
+            <div class="catalog-item"><div><div class="catalog-name">Banco Nacional</div><div class="catalog-meta">BNA · Panamá</div></div><div><span class="badge badge-green">Activo</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Petroquímica del Sur</div><div class="catalog-meta">PQS · Argentina</div></div><div><span class="badge badge-green">Activo</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">TechCorp International</div><div class="catalog-meta">TCI · USA</div></div><div><span class="badge badge-green">Activo</span></div></div>
+            <div class="catalog-item"><div><div class="catalog-name">Aerolíneas Regionales</div><div class="catalog-meta">AERO · Panamá</div></div><div><span class="badge badge-amber">Pausado</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: AUDIT -->
+    <div id="tab-audit" class="tab-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Audit Log</div>
+          <div class="page-subtitle">Registro inmutable de todas las acciones del sistema</div>
+        </div>
+        <button class="btn btn-secondary">Exportar CSV</button>
+      </div>
+      <div class="table-wrapper">
+        <div class="table-toolbar">
+          <input class="search-input" placeholder="🔍  Buscar acción, usuario, recurso…">
+          <select class="filter-select">
+            <option>Todos los tipos</option>
+            <option>CREATE</option><option>UPDATE</option><option>DELETE</option><option>LOGIN</option>
+          </select>
+          <select class="filter-select">
+            <option>Último día</option><option>Última semana</option><option>Último mes</option>
+          </select>
+        </div>
+        <div>
+          <div class="audit-row"><div class="audit-icon update">✏️</div><div class="audit-content"><div class="audit-title">Carolina Manzano actualizó <strong>Factura #FAC-2026-089</strong></div><div class="audit-detail">Campo: status → "Emitida" | Módulo: M6 | IP: 192.168.1.45</div></div><div class="audit-time">Hoy 10:22</div></div>
+          <div class="audit-row"><div class="audit-icon login">🔑</div><div class="audit-content"><div class="audit-title">Lucas Rodríguez inició sesión</div><div class="audit-detail">Google Auth | strata-analytics.us | IP: 181.30.22.10</div></div><div class="audit-time">Hoy 09:55</div></div>
+          <div class="audit-row"><div class="audit-icon create">+</div><div class="audit-content"><div class="audit-title">Alejandro García creó <strong>proyecto BNA-PAN-CLD-2026-004</strong></div><div class="audit-detail">Módulo: M2 | Nombre: "Cloud Migration Phase 2"</div></div><div class="audit-time">Hoy 09:12</div></div>
+          <div class="audit-row"><div class="audit-icon update">✏️</div><div class="audit-content"><div class="audit-title">Juan Torres modificó asignación en <strong>M3 — Quincena 2026-06</strong></div><div class="audit-detail">Colaborador: Rosa López | Proyecto: BNA-PAN-CLD-2026-004 | 0% → 30% | Notificación Slack enviada a EL/PO</div></div><div class="audit-time">Ayer 17:30</div></div>
+          <div class="audit-row"><div class="audit-icon delete">🗑</div><div class="audit-content"><div class="audit-title">Lucas Rodríguez eliminó override de módulo para <strong>Pedro Castillo</strong></div><div class="audit-detail">Override: M5 EDITOR → Removido | Razón: "Proyecto finalizado"</div></div><div class="audit-time">Ayer 14:15</div></div>
+          <div class="audit-row"><div class="audit-icon create">+</div><div class="audit-content"><div class="audit-title">Carolina Manzano creó <strong>PO PQS-ARG-DAT-2026-001-PO3</strong></div><div class="audit-detail">Módulo: M6 | Monto: ARS 2,400,000 | Proyecto: PQS-ARG-DAT-2026-001</div></div><div class="audit-time">Ayer 11:08</div></div>
+          <div class="audit-row"><div class="audit-icon update">✏️</div><div class="audit-content"><div class="audit-title">Lucas Rodríguez asignó override de módulo a <strong>María Pérez</strong></div><div class="audit-detail">Módulo: M2 → EDITOR | Razón: "Coordinación de POs para Q2"</div></div><div class="audit-time">Hace 2 días</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: NOTIFICATIONS -->
+    <div id="tab-notifications" class="tab-content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Notificaciones</div>
+          <div class="page-subtitle">Centro de alertas del sistema</div>
+        </div>
+        <button class="btn btn-secondary btn-sm">Marcar todas como leídas</button>
+      </div>
+      <div class="table-wrapper">
+        <div class="notif-item unread"><div class="notif-dot-sm"></div><div><div class="notif-text"><strong>Slack:</strong> Rosa López fue asignada a BNA-PAN-CLD-2026-004 (30%) por Juan Torres</div><div class="notif-time">Hace 2 horas · M3 Demand Planning</div></div></div>
+        <div class="notif-item unread"><div class="notif-dot-sm"></div><div><div class="notif-text"><strong>Sistema:</strong> Período Q1-2026-06 fue cerrado automáticamente (auto-dump viernes 18:00)</div><div class="notif-time">Ayer 18:00 · M3 Demand Planning</div></div></div>
+        <div class="notif-item unread"><div class="notif-dot-sm"></div><div><div class="notif-text"><strong>Billing:</strong> Factura FAC-2026-089 cambiada a estado "Emitida" por Carolina Manzano</div><div class="notif-time">Hoy 10:22 · M6 Billing</div></div></div>
+        <div class="notif-item"><div style="width:8px;flex-shrink:0"></div><div><div class="notif-text">Nuevo proyecto creado: BNA-PAN-CLD-2026-004 "Cloud Migration Phase 2"</div><div class="notif-time">Hoy 09:12 · M2 Project Registry</div></div></div>
+        <div class="notif-item"><div style="width:8px;flex-shrink:0"></div><div><div class="notif-text">TimeJuggle de la semana 2026-W11 cerrado correctamente. 38/41 colaboradores completaron entrada.</div><div class="notif-time">Hace 3 días · M4 TimeJuggle</div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tabName).classList.add('active');
+  const titles = { users: 'Gestión de Usuarios', catalogs: 'Catálogos', audit: 'Audit Log', notifications: 'Notificaciones' };
+  document.getElementById('topbarTitle').textContent = titles[tabName] || '';
+  document.querySelectorAll('.sidebar-item').forEach((el,i) => {
+    el.classList.remove('active');
+    if (i === ['users','catalogs','audit','notifications'].indexOf(tabName)) el.classList.add('active');
+  });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StrataPMS 2.0 — M3 Demand Planning — Interactive Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --m0:#1007a0; --m1:#307fe2; --m2:#9063cd; --m3:#320073;
+  --bg:#f4f6fb; --card:#ffffff; --border:#e4e8f1;
+  --text:#1a1a2e; --muted:#6b7280;
+  --green:#16a34a; --green-bg:#f0fdf4; --green-border:#bbf7d0;
+  --amber:#d97706; --amber-bg:#fffbeb; --amber-border:#fde68a;
+  --red:#dc2626; --red-bg:#fef2f2; --red-border:#fecaca;
+  --blue:#2563eb; --blue-bg:#eff6ff;
+  --ft:'Inter',sans-serif; --fb:'Libre Franklin',sans-serif;
+  --area-data:#EFF6FF; --area-dev:#F0FDF4; --area-qa:#FFFBEB;
+  --area-cloud:#F5F3FF; --area-pm:#FDF2F8; --area-agile:#F0FDFA;
+  --area-data-accent:#3b82f6; --area-dev-accent:#16a34a; --area-qa-accent:#d97706;
+  --area-cloud-accent:#7c3aed; --area-pm-accent:#db2777; --area-agile-accent:#0d9488;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  /* Fixed column widths */
+  --col-name-w: 180px;
+  --col-sen-w: 56px;
+  --col-area-w: 64px;
+  --col-rp-w: 52px;
+  --col-sa-w: 68px;
+  --col-proj-w: 72px;
+  --frozen-total: 420px; /* sum of all frozen cols including rp */
+  --frozen-no-rp: 368px; /* without rp col */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg, var(--m0) 0%, var(--m3) 100%);padding:18px 32px;display:flex;align-items:center;gap:20px;position:relative}
+.hdr h1{font-family:var(--ft);font-size:17px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.hdr .subtitle{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;font-weight:400}
+.hdr .badge{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-family:var(--ft);font-size:9px;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:.8px;text-transform:uppercase;backdrop-filter:blur(4px)}
+.hdr .right{margin-left:auto;display:flex;align-items:center;gap:16px}
+.hdr .users{display:flex}
+.hdr .user-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;border:2px solid rgba(255,255,255,.3);margin-left:-6px;cursor:default;transition:transform .15s}
+.hdr .user-dot:hover{transform:scale(1.15);z-index:1}
+.hdr .connected-label{font-size:10px;color:rgba(255,255,255,.4);font-weight:500}
+
+/* ── TABS ── */
+.view-tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);padding:0 32px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm)}
+.vtab{padding:13px 22px;font-family:var(--ft);font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.3px;text-transform:uppercase}
+.vtab:hover{color:var(--m0);background:rgba(16,7,160,.03)}
+.vtab.active{color:var(--m0);border-bottom-color:var(--m0)}
+
+/* ── TOOLBAR ── */
+.toolbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tbtn{font-family:var(--ft);font-size:11px;font-weight:600;padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.tbtn:hover{background:var(--bg);border-color:var(--m1);box-shadow:var(--shadow-sm)}
+.tbtn.primary{background:var(--m0);color:#fff;border-color:var(--m0)}
+.tbtn.primary:hover{background:var(--m3);box-shadow:0 2px 8px rgba(16,7,160,.25)}
+.tbtn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+.tbtn .count-badge{background:var(--red);color:#fff;font-size:9px;padding:1px 6px;border-radius:10px;margin-left:2px}
+.toolbar .sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.toolbar .auto-dump{font-size:10px;color:var(--muted);margin-left:auto;display:flex;align-items:center;gap:4px}
+.toolbar .auto-dump .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Toggle button for RP and Metrics */
+.tbtn.toggle-btn{background:#f8f9fc;border:1px solid var(--border);color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.2px}
+.tbtn.toggle-btn.active{background:var(--m2);color:#fff;border-color:var(--m2)}
+.tbtn.toggle-btn:hover{border-color:var(--m2)}
+
+/* ── FILTERS ── */
+.filters{background:#fff;border-bottom:1px solid var(--border);padding:10px 32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-input{font-family:var(--ft);font-size:11px;padding:7px 10px 7px 30px;border:1px solid var(--border);border-radius:var(--radius-sm);width:180px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 9px center no-repeat;transition:all .15s}
+.filter-input:focus{outline:none;border-color:var(--m1);box-shadow:0 0 0 3px rgba(48,127,226,.1)}
+.filter-select{font-family:var(--ft);font-size:11px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);cursor:pointer;min-width:100px;transition:all .15s}
+.filter-select:focus{outline:none;border-color:var(--m1);box-shadow:0 0 0 3px rgba(48,127,226,.1)}
+.filter-toggle{font-family:var(--ft);font-size:10px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:all .15s}
+.filter-toggle.active{background:var(--m0);color:#fff;border-color:var(--m0)}
+.filter-indicator{font-size:10px;color:var(--m1);font-weight:600;margin-left:auto}
+
+/* ── GRID CONTAINER ── */
+.grid-panel{margin:16px 24px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-md);overflow:hidden;border:1px solid var(--border)}
+.grid-wrap{position:relative;overflow:auto;background:#fff}
+.grid-wrap::-webkit-scrollbar{height:8px;width:8px}
+.grid-wrap::-webkit-scrollbar-track{background:#f8f9fc;border-radius:4px}
+.grid-wrap::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+.grid-wrap::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+
+/* ── GRID TABLE ── */
+.grid{border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:100%}
+.grid th,.grid td{font-family:var(--ft);font-size:11px;border-bottom:1px solid #f0f1f5;border-right:1px solid #f0f1f5;padding:0;text-align:center;position:relative;height:34px}
+.grid th{background:#fafbfd;font-weight:600;color:var(--muted);position:sticky;top:0;z-index:20;height:auto;border-bottom:2px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.3px}
+
+/* ── FROZEN COLUMNS with fixed widths ── */
+.grid .frozen{position:sticky;z-index:25;background:#fff}
+.grid th.frozen{z-index:30;background:#fafbfd}
+.grid .col-name{left:0;width:var(--col-name-w);min-width:var(--col-name-w);max-width:var(--col-name-w);text-align:left;padding-left:12px}
+.grid .col-sen{left:var(--col-name-w);width:var(--col-sen-w);min-width:var(--col-sen-w);max-width:var(--col-sen-w)}
+.grid .col-area{left:calc(var(--col-name-w) + var(--col-sen-w));width:var(--col-area-w);min-width:var(--col-area-w);max-width:var(--col-area-w)}
+.grid .col-rp{left:calc(var(--col-name-w) + var(--col-sen-w) + var(--col-area-w));width:var(--col-rp-w);min-width:var(--col-rp-w);max-width:var(--col-rp-w)}
+.grid .col-sa{width:var(--col-sa-w);min-width:var(--col-sa-w);max-width:var(--col-sa-w);border-right:2px solid var(--m2) !important}
+
+/* Dynamic left for col-sa based on RP visibility */
+.grid .col-sa{left:calc(var(--col-name-w) + var(--col-sen-w) + var(--col-area-w) + var(--col-rp-w))}
+.grid.hide-rp .col-sa{left:calc(var(--col-name-w) + var(--col-sen-w) + var(--col-area-w))}
+
+/* Hide RP column */
+.grid.hide-rp .col-rp{display:none}
+
+/* ── PROJECT COLUMNS ── */
+.grid .col-proj{width:var(--col-proj-w);min-width:var(--col-proj-w);max-width:var(--col-proj-w)}
+
+/* ── HEADER CELLS ── */
+.grid .hdr-row th{padding:8px 4px;vertical-align:middle}
+.grid .hdr-code{font-size:8px;color:var(--muted);font-weight:600;letter-spacing:.4px;opacity:.7}
+.grid .hdr-name{font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:var(--col-proj-w);display:block;margin:2px auto;text-transform:none;letter-spacing:0}
+.grid .hdr-total{font-size:9px;color:var(--m1);font-weight:700;opacity:.8}
+
+/* ── AREA GROUP HEADER ROWS ── */
+.grid .area-group-row td{
+  padding:6px 12px;font-family:var(--ft);font-size:10px;font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;text-align:left;
+  border-bottom:1px solid rgba(0,0,0,.06);height:28px;
+}
+.grid .area-group-row.area-agile td{background:var(--area-agile);color:var(--area-agile-accent)}
+.grid .area-group-row.area-cloud td{background:var(--area-cloud);color:var(--area-cloud-accent)}
+.grid .area-group-row.area-data td{background:var(--area-data);color:var(--area-data-accent)}
+.grid .area-group-row.area-dev td{background:var(--area-dev);color:var(--area-dev-accent)}
+.grid .area-group-row.area-pm td{background:var(--area-pm);color:var(--area-pm-accent)}
+.grid .area-group-row.area-qa td{background:var(--area-qa);color:var(--area-qa-accent)}
+
+/* ── SUMMARY ROWS ── */
+.grid .summary-row td{background:#fafbfd;font-weight:700;font-size:10px;padding:4px 2px;border-top:1px solid var(--border)}
+.grid .summary-row:first-of-type td{border-top:2px solid var(--m2)}
+.grid .summary-row .label{text-align:right;padding-right:8px;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.grid .summary-gap-pos{color:var(--green)}
+.grid .summary-gap-neg{color:var(--red);font-weight:800}
+
+/* Summary rows collapsed state */
+.grid .summary-row{transition:all .25s ease}
+.grid.metrics-collapsed .summary-row{display:none}
+.metrics-accent-line{display:none;height:3px;background:linear-gradient(90deg, var(--m2), var(--m1));border-radius:2px;margin:0}
+.grid.metrics-collapsed + .metrics-accent-line{display:block}
+
+/* ── DATA CELLS ── */
+.grid .data-cell{padding:0;cursor:default;transition:background .12s}
+.grid .data-cell .val{display:flex;align-items:center;justify-content:center;height:100%;width:100%;padding:4px;font-weight:500}
+.grid .data-cell:hover{background:rgba(48,127,226,.04)}
+.grid .data-cell.editable{cursor:cell}
+.grid .data-cell.editable:hover{background:rgba(48,127,226,.08);box-shadow:inset 0 0 0 1.5px var(--m1)}
+.grid .data-cell.editing{background:#fff;box-shadow:inset 0 0 0 2px var(--m0)}
+.grid .data-cell.editing input{width:100%;height:100%;border:none;text-align:center;font-family:var(--ft);font-size:12px;font-weight:700;color:var(--m0);background:transparent;outline:none}
+.grid .data-cell.no-perm{background:#f9fafb;color:#d1d5db}
+.grid .data-cell.locked{background:#f9fafb;color:#9ca3af}
+.grid .data-cell.presence{box-shadow:inset 0 0 0 2px #f59e0b}
+.grid .data-cell .presence-dot{position:absolute;top:1px;right:1px;width:8px;height:8px;border-radius:50%;font-size:5px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900}
+
+/* Value cells with data get a subtle bg */
+.grid .data-cell .val:not(:empty){color:var(--text)}
+
+/* ── NAME CELL ── */
+.grid .name-cell{display:flex;align-items:center;gap:8px;padding:5px 0 5px 12px;font-weight:600;font-size:11px}
+.grid .name-cell .avatar{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0}
+.grid .name-cell .info{display:flex;flex-direction:column;overflow:hidden}
+.grid .name-cell .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--text)}
+
+/* Row left border accent by area */
+.grid .data-row[data-area="Agile"] .col-name{border-left:3px solid var(--area-agile-accent)}
+.grid .data-row[data-area="Cloud"] .col-name{border-left:3px solid var(--area-cloud-accent)}
+.grid .data-row[data-area="Data"] .col-name{border-left:3px solid var(--area-data-accent)}
+.grid .data-row[data-area="Dev"] .col-name{border-left:3px solid var(--area-dev-accent)}
+.grid .data-row[data-area="PM"] .col-name{border-left:3px solid var(--area-pm-accent)}
+.grid .data-row[data-area="QA"] .col-name{border-left:3px solid var(--area-qa-accent)}
+
+/* ── SIN ASIGNAR CELL ── */
+.grid .sa-cell{font-weight:800;font-size:11px}
+.grid .sa-cell.sa-ok{color:var(--green)}
+.grid .sa-cell.sa-warn{color:var(--red);background:rgba(220,38,38,.06)}
+
+/* ── PERIOD STATUS ── */
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.status-active{background:var(--green)}
+.status-draft{background:var(--amber)}
+.status-locked{background:var(--red)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;font-family:var(--ft);font-size:12px;font-weight:500;padding:12px 22px;border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:100;display:none;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── CONFLICT MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:var(--radius);width:440px;padding:28px;box-shadow:var(--shadow-lg)}
+.modal h3{font-family:var(--ft);font-size:15px;font-weight:800;margin-bottom:4px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.modal .conflict-vals{display:flex;gap:12px;margin-bottom:20px}
+.modal .conflict-val{flex:1;padding:14px;border-radius:var(--radius);text-align:center}
+.modal .conflict-val.theirs{background:var(--blue-bg);border:1px solid #bfdbfe}
+.modal .conflict-val.yours{background:#fef2f2;border:1px solid var(--red-border)}
+.modal .conflict-val .label{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.5px}
+.modal .conflict-val .num{font-family:var(--ft);font-size:24px;font-weight:800;margin-top:4px}
+.modal .conflict-val .by{font-size:10px;color:var(--muted);margin-top:2px}
+.modal .modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal .modal-btns button{padding:8px 18px;border-radius:var(--radius-sm);font-family:var(--ft);font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .15s}
+.modal .btn-accept{background:var(--m1);color:#fff}
+.modal .btn-accept:hover{background:var(--m0)}
+.modal .btn-retry{background:#fff;color:var(--text);border:1px solid var(--border)}
+.modal .btn-retry:hover{background:var(--bg)}
+
+/* ── CR MODAL ── */
+.cr-modal .cr-cell-info{background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:16px;font-size:11px}
+.cr-modal .cr-cell-info strong{color:var(--m0)}
+.cr-modal textarea{width:100%;height:60px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;font-family:var(--fb);font-size:11px;resize:vertical}
+.cr-modal textarea:focus{outline:none;border-color:var(--m1);box-shadow:0 0 0 3px rgba(48,127,226,.1)}
+
+/* ── COLLABORATOR VIEW ── */
+.collab-view{padding:32px;max-width:800px;margin:0 auto}
+.collab-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-md)}
+.collab-header{padding:22px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px}
+.collab-header .av{width:48px;height:48px;border-radius:var(--radius);background:var(--m1);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff}
+.collab-header .info h3{font-family:var(--ft);font-size:16px;font-weight:800}
+.collab-header .info p{font-size:12px;color:var(--muted)}
+.collab-stats{display:flex;gap:0;border-bottom:1px solid var(--border)}
+.collab-stat{flex:1;padding:16px 20px;text-align:center;border-right:1px solid var(--border)}
+.collab-stat:last-child{border-right:none}
+.collab-stat .num{font-family:var(--ft);font-size:22px;font-weight:800;color:var(--m0)}
+.collab-stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-top:2px}
+.collab-stat .num.danger{color:var(--red)}
+.collab-progress{padding:16px 28px;border-bottom:1px solid var(--border)}
+.collab-progress .bar-bg{height:12px;background:var(--bg);border-radius:6px;overflow:hidden;display:flex}
+.collab-progress .bar-fill{height:100%;transition:width .3s}
+.collab-progress .bar-legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.collab-progress .legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.collab-progress .legend-dot{width:8px;height:8px;border-radius:3px}
+.collab-table{width:100%;border-collapse:collapse}
+.collab-table th{font-family:var(--ft);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:#fafbfd}
+.collab-table td{font-size:12px;padding:12px 16px;border-bottom:1px solid #f3f4f6}
+.collab-table .proj-code{font-family:var(--ft);font-size:10px;color:var(--muted);font-weight:600}
+.collab-table .pct{font-family:var(--ft);font-weight:700;font-size:13px}
+.collab-table .pct-bar{width:60px;height:6px;background:var(--bg);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:6px;overflow:hidden}
+.collab-table .pct-bar-fill{height:100%;border-radius:3px}
+.collab-table tfoot td{font-weight:700;border-top:2px solid var(--border);background:#fafbfd}
+
+/* ── SECTION PANELS ── */
+.section-panel{display:none}
+.section-panel.active{display:block}
+
+/* ── RESPONSIVE NOTE ── */
+.note-bar{background:var(--amber-bg);border:1px solid var(--amber-border);padding:8px 32px;font-size:10px;color:var(--amber);font-weight:600;text-align:center;font-family:var(--ft)}
+
+/* ── M3 SIDEBAR ── */
+.m3-sidebar{width:220px;min-height:100vh;background:#1007a0;display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:200;flex-shrink:0}
+.m3-sidebar-logo{height:56px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.12)}
+.m3-sidebar-logo span{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;color:white;letter-spacing:.3px}
+.m3-sidebar-logo small{font-size:9px;font-weight:400;color:rgba(255,255,255,.45);display:block;line-height:1}
+.m3-sidebar-section{padding:10px 0 4px}
+.m3-sidebar-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.35);padding:0 18px;margin-bottom:3px}
+.m3-sidebar-item{display:flex;align-items:center;gap:8px;padding:8px 18px;color:rgba(255,255,255,.68);font-size:12px;font-weight:400;cursor:pointer;text-decoration:none;transition:background .12s;border-left:3px solid transparent}
+.m3-sidebar-item:hover{background:rgba(255,255,255,.08);color:white}
+.m3-sidebar-item.m3-active{background:rgba(255,255,255,.13);color:white;border-left-color:#307fe2;font-weight:500}
+.m3-sidebar-footer{margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:8px}
+.m3-avatar{width:26px;height:26px;border-radius:50%;background:#307fe2;display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:700;flex-shrink:0}
+.m3-wrap{margin-left:220px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="m3-sidebar">
+  <div class="m3-sidebar-logo">
+    <div><span>STRATA</span><small>PMS TimeJuggle 2.0</small></div>
+  </div>
+  <div class="m3-sidebar-section">
+    <div class="m3-sidebar-label">Módulos</div>
+    <a href="mockups/m0-core-platform.html" class="m3-sidebar-item">⚙️ M0 Core Platform</a>
+    <a href="mockups/m1-colaboradores.html" class="m3-sidebar-item">👥 M1 Colaboradores</a>
+    <a href="mockups/m2-project-registry.html" class="m3-sidebar-item">📁 M2 Proyectos</a>
+    <a href="m3-demand-planning-mockup.html" class="m3-sidebar-item m3-active">📊 M3 Demand Planning</a>
+    <a href="mockups/m4-timejuggle.html" class="m3-sidebar-item">⏱ M4 TimeJuggle</a>
+    <a href="mockups/m5-pm-scrum.html" class="m3-sidebar-item">🏃 M5 PM Scrum</a>
+    <a href="mockups/m6-billing.html" class="m3-sidebar-item">💳 M6 Billing</a>
+    <a href="mockups/m7-kpis.html" class="m3-sidebar-item">📈 M7 KPIs</a>
+  </div>
+  <div class="m3-sidebar-section">
+    <div class="m3-sidebar-label">Navegación</div>
+    <a href="mockups/index.html" class="m3-sidebar-item">🏠 Índice general</a>
+  </div>
+  <div class="m3-sidebar-footer">
+    <div class="m3-avatar">LR</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:11px;color:white;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lucas Rodríguez</div>
+      <div style="font-size:9px;color:rgba(255,255,255,.45)">SUPERADMIN</div>
+    </div>
+  </div>
+</aside>
+
+<div class="m3-wrap">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <h1>M3 — Demand Planning</h1>
+    <div class="subtitle">Strata Scrums — Asignacion de demanda quincenal</div>
+  </div>
+  <span class="badge">INTERACTIVE MOCKUP</span>
+  <div class="right">
+    <div class="users" title="Usuarios conectados">
+      <div class="user-dot" style="background:#3b82f6" title="Lucas Riera">LR</div>
+      <div class="user-dot" style="background:#f59e0b" title="Albi Martinez">AM</div>
+      <div class="user-dot" style="background:#10b981" title="Pedro Lopez">PL</div>
+    </div>
+    <span class="connected-label">3 conectados</span>
+  </div>
+</div>
+
+<!-- VIEW TABS -->
+<div class="view-tabs">
+  <div class="vtab active" onclick="switchView('grid')">Grilla de Planificacion</div>
+  <div class="vtab" onclick="switchView('collab')">Vista Colaborador</div>
+  <div class="vtab" onclick="switchView('locked')">Periodo Lockeado + CR</div>
+  <div class="vtab" onclick="switchView('filters')">Filtros en Accion</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- VIEW 1: GRID PRINCIPAL -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="view-grid" class="section-panel active">
+
+<div class="toolbar">
+  <button class="tbtn primary" title="Solo ADMIN">+ Nuevo Periodo</button>
+  <button class="tbtn" title="Solo ADMIN">Activar</button>
+  <button class="tbtn danger" title="Solo ADMIN" onclick="showToast('Periodo lockeado. Todos los cambios ahora requieren Change Request.')">Lockear</button>
+  <button class="tbtn">Exportar CSV</button>
+  <div class="sep"></div>
+  <button class="tbtn">CR Pendientes <span class="count-badge">2</span></button>
+  <div class="sep"></div>
+  <button class="tbtn toggle-btn" id="toggleRP" onclick="toggleRPColumn()">Mostrar RP</button>
+  <button class="tbtn toggle-btn" id="toggleMetrics" onclick="toggleMetrics()">Metricas &#9656;</button>
+  <div class="auto-dump">
+    <span class="dot"></span> Auto-dump: Vie 18:00 &nbsp;|&nbsp; Periodo: <strong>Q1-S2 (Mar 18 - Mar 31)</strong> &nbsp;<span class="status-dot status-active"></span>ACTIVE
+  </div>
+</div>
+
+<div class="filters">
+  <input class="filter-input" type="text" placeholder="Buscar colaborador..." id="searchCollab" oninput="filterGrid()">
+  <select class="filter-select" id="filterSeniority" onchange="filterGrid()">
+    <option value="">Seniority</option>
+    <option>Jr</option><option>Mid</option><option>Sr</option><option>Lead</option>
+  </select>
+  <select class="filter-select" id="filterArea" onchange="filterGrid()">
+    <option value="">Area</option>
+    <option>Agile</option><option>Cloud</option><option>Data</option><option>Dev</option><option>PM</option><option>QA</option>
+  </select>
+  <select class="filter-select" id="filterClient" onchange="filterProjectCols()">
+    <option value="">Cliente</option>
+    <option value="Acme Corp">Acme Corp</option>
+    <option value="TechFin SA">TechFin SA</option>
+    <option value="Internal">Internal</option>
+    <option value="DataMex">DataMex</option>
+  </select>
+  <select class="filter-select" id="filterType" onchange="filterProjectCols()">
+    <option value="">Tipo</option>
+    <option value="Billable">Billable</option>
+    <option value="Non-Billable">Non-Billable</option>
+    <option value="Internal">Internal</option>
+  </select>
+  <div class="sep"></div>
+  <span class="filter-toggle" id="toggleUnassigned" onclick="toggleFilter(this)">Solo sin asignar</span>
+  <span class="filter-toggle" id="toggleMyProj" onclick="toggleFilter(this)">Mis proyectos</span>
+  <span class="filter-indicator" id="filterIndicator"></span>
+</div>
+
+<div class="grid-panel">
+<div class="grid-wrap" style="max-height:calc(100vh - 280px)">
+<table class="grid hide-rp" id="mainGrid">
+  <thead>
+    <tr class="hdr-row">
+      <th class="frozen col-name" rowspan="2">Colaborador</th>
+      <th class="frozen col-sen" rowspan="2">Sen.</th>
+      <th class="frozen col-area" rowspan="2">Area</th>
+      <th class="frozen col-rp" rowspan="2">RP C</th>
+      <th class="frozen col-sa" rowspan="2">Sin Asg</th>
+      <th class="col-proj" data-client="Acme Corp" data-type="Billable"><div class="hdr-code">CLI-PA-DEV</div><div class="hdr-name" title="Portal Cliente Acme">Portal Acme</div><div class="hdr-total">&Sigma; 200%</div></th>
+      <th class="col-proj" data-client="Acme Corp" data-type="Billable"><div class="hdr-code">CLI-PA-DAT</div><div class="hdr-name" title="Analytics Acme">Analytics</div><div class="hdr-total">&Sigma; 175%</div></th>
+      <th class="col-proj" data-client="TechFin SA" data-type="Billable"><div class="hdr-code">TFN-US-DEV</div><div class="hdr-name" title="API Pagos TechFin">API Pagos</div><div class="hdr-total">&Sigma; 155%</div></th>
+      <th class="col-proj" data-client="TechFin SA" data-type="Billable"><div class="hdr-code">TFN-US-QA</div><div class="hdr-name" title="QA TechFin">QA TechFin</div><div class="hdr-total">&Sigma; 75%</div></th>
+      <th class="col-proj" data-client="DataMex" data-type="Billable"><div class="hdr-code">DMX-PA-DAT</div><div class="hdr-name" title="Data Pipeline DataMex">Data Pipeline</div><div class="hdr-total">&Sigma; 130%</div></th>
+      <th class="col-proj" data-client="DataMex" data-type="Billable"><div class="hdr-code">DMX-PA-CLD</div><div class="hdr-name" title="Cloud Migration DataMex">Cloud Migr.</div><div class="hdr-total">&Sigma; 50%</div></th>
+      <th class="col-proj" data-client="Internal" data-type="Non-Billable"><div class="hdr-code">STR-INT-OPS</div><div class="hdr-name" title="Ops Interna">Ops Interna</div><div class="hdr-total">&Sigma; 35%</div></th>
+      <th class="col-proj" data-client="Internal" data-type="Internal"><div class="hdr-code">STR-INT-RND</div><div class="hdr-name" title="R&D Interno">R&amp;D</div><div class="hdr-total">&Sigma; 50%</div></th>
+      <th class="col-proj" data-client="TechFin SA" data-type="Billable"><div class="hdr-code">TFN-MX-DEV</div><div class="hdr-name" title="App Mobile TechFin">App Mobile</div><div class="hdr-total">&Sigma; 15%</div></th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- SUMMARY ROWS (default collapsed) -->
+    <tr class="summary-row">
+      <td class="frozen col-name label">FTE</td>
+      <td class="frozen col-sen"></td><td class="frozen col-area"></td><td class="frozen col-rp"></td>
+      <td class="frozen col-sa"></td>
+      <td class="col-proj">2.00</td><td class="col-proj">1.75</td><td class="col-proj">1.55</td><td class="col-proj">0.75</td><td class="col-proj">1.30</td><td class="col-proj">0.50</td><td class="col-proj">0.35</td><td class="col-proj">0.50</td><td class="col-proj">0.15</td>
+    </tr>
+    <tr class="summary-row">
+      <td class="frozen col-name label">RP Ejec</td>
+      <td class="frozen col-sen"></td><td class="frozen col-area"></td><td class="frozen col-rp"></td>
+      <td class="frozen col-sa"></td>
+      <td class="col-proj">33.0</td><td class="col-proj">29.0</td><td class="col-proj">25.0</td><td class="col-proj">12.0</td><td class="col-proj">22.0</td><td class="col-proj">9.0</td><td class="col-proj">6.0</td><td class="col-proj">8.0</td><td class="col-proj">2.7</td>
+    </tr>
+    <tr class="summary-row">
+      <td class="frozen col-name label">SP Contr</td>
+      <td class="frozen col-sen"></td><td class="frozen col-area"></td><td class="frozen col-rp"></td>
+      <td class="frozen col-sa"></td>
+      <td class="col-proj">30</td><td class="col-proj">25</td><td class="col-proj">25</td><td class="col-proj">12</td><td class="col-proj">24</td><td class="col-proj">10</td><td class="col-proj" style="color:#9ca3af">--</td><td class="col-proj" style="color:#9ca3af">--</td><td class="col-proj">3</td>
+    </tr>
+    <tr class="summary-row">
+      <td class="frozen col-name label">GAP</td>
+      <td class="frozen col-sen"></td><td class="frozen col-area"></td><td class="frozen col-rp"></td>
+      <td class="frozen col-sa"></td>
+      <td class="col-proj summary-gap-pos">+3.0</td><td class="col-proj summary-gap-pos">+4.0</td><td class="col-proj" style="color:var(--muted)">0.0</td><td class="col-proj" style="color:var(--muted)">0.0</td><td class="col-proj summary-gap-neg">-2.0</td><td class="col-proj summary-gap-neg">-1.0</td><td class="col-proj" style="color:#9ca3af">--</td><td class="col-proj" style="color:#9ca3af">--</td><td class="col-proj summary-gap-neg">-0.3</td>
+    </tr>
+
+    <!-- ═══ AREA: AGILE ═══ -->
+    <tr class="area-group-row area-agile">
+      <td colspan="14" style="padding-left:14px">Agile</td>
+    </tr>
+
+    <tr class="data-row" data-name="Roberto Paz" data-sen="Sr" data-area="Agile">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-agile-accent)">RP</div><div class="info"><span class="nm">Roberto Paz</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Sr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Agile</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">16</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-ok">0%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">50</div></td>
+      <td class="data-cell editable col-proj presence" onclick="editCell(this)"><div class="val">25</div><div class="presence-dot" style="background:#f59e0b" title="Albi Martinez editando">A</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <!-- ═══ AREA: CLOUD ═══ -->
+    <tr class="area-group-row area-cloud">
+      <td colspan="14" style="padding-left:14px">Cloud</td>
+    </tr>
+
+    <tr class="data-row" data-name="Carlos Diaz" data-sen="Lead" data-area="Cloud">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-cloud-accent)">CD</div><div class="info"><span class="nm">Carlos Diaz</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Lead</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Cloud</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">22</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-warn">10%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">30</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">40</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">20</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <!-- ═══ AREA: DATA ═══ -->
+    <tr class="area-group-row area-data">
+      <td colspan="14" style="padding-left:14px">Data</td>
+    </tr>
+
+    <tr class="data-row" data-name="Ana Garcia" data-sen="Sr" data-area="Data">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-data-accent)">AG</div><div class="info"><span class="nm">Ana Garcia</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Sr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Data</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">20</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-ok">0%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">50</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <tr class="data-row" data-name="Camila Herrera" data-sen="Jr" data-area="Data">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-data-accent)">CH</div><div class="info"><span class="nm">Camila Herrera</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Jr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Data</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">8</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-warn">50%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <tr class="data-row" data-name="Sofia Torres" data-sen="Sr" data-area="Data">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-data-accent)">ST</div><div class="info"><span class="nm">Sofia Torres</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Sr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Data</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">20</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-ok">0%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">50</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <!-- ═══ AREA: DEV ═══ -->
+    <tr class="area-group-row area-dev">
+      <td colspan="14" style="padding-left:14px">Dev</td>
+    </tr>
+
+    <tr class="data-row" data-name="Diego Fernandez" data-sen="Mid" data-area="Dev">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-dev-accent)">DF</div><div class="info"><span class="nm">Diego Fernandez</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Mid</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Dev</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">15</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-ok">0%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">50</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <tr class="data-row" data-name="Laura Mendez" data-sen="Jr" data-area="Dev">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-dev-accent)">LM</div><div class="info"><span class="nm">Laura Mendez</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Jr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Dev</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">10</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-warn">40%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">10</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <tr class="data-row" data-name="Martin Rojas" data-sen="Sr" data-area="Dev">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-dev-accent)">MR</div><div class="info"><span class="nm">Martin Rojas</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Sr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Dev</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">20</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-ok">0%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">50</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <tr class="data-row" data-name="Pedro Lopez" data-sen="Mid" data-area="Dev">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-dev-accent)">PL</div><div class="info"><span class="nm">Pedro Lopez</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Mid</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Dev</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">15</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-warn">25%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">50</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <!-- ═══ AREA: PM ═══ -->
+    <tr class="area-group-row area-pm">
+      <td colspan="14" style="padding-left:14px">PM</td>
+    </tr>
+
+    <tr class="data-row" data-name="Valentina Sosa" data-sen="Mid" data-area="PM">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-pm-accent)">VS</div><div class="info"><span class="nm">Valentina Sosa</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Mid</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">PM</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">12</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-warn">15%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">10</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">25</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+    </tr>
+
+    <!-- ═══ AREA: QA ═══ -->
+    <tr class="area-group-row area-qa">
+      <td colspan="14" style="padding-left:14px">QA</td>
+    </tr>
+
+    <tr class="data-row" data-name="Maria Ruiz" data-sen="Sr" data-area="QA">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-qa-accent)">MR</div><div class="info"><span class="nm">Maria Ruiz</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Sr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">QA</td>
+      <td class="frozen col-rp" style="font-weight:700;font-size:11px">18</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-ok">0%</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">30</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">40</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">15</div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val"></div></td>
+      <td class="data-cell editable col-proj" onclick="editCell(this)"><div class="val">15</div></td>
+    </tr>
+
+  </tbody>
+</table>
+<div class="metrics-accent-line"></div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- VIEW 2: COLLABORATOR VIEW -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="view-collab" class="section-panel">
+<div class="collab-view">
+  <div style="margin-bottom:16px;display:flex;align-items:center;gap:12px">
+    <span style="font-family:var(--ft);font-size:14px;font-weight:700;color:var(--m0)">Mi Asignacion de Demanda</span>
+    <span style="font-size:11px;color:var(--muted)">Periodo: Q1-S2 (Mar 18 - Mar 31)</span>
+    <span class="status-dot status-active" style="margin-left:4px"></span><span style="font-size:10px;color:var(--green);font-weight:600">ACTIVE</span>
+  </div>
+  <div class="collab-card">
+    <div class="collab-header">
+      <div class="av">PL</div>
+      <div class="info">
+        <h3>Pedro Lopez</h3>
+        <p>Mid Developer &nbsp;&middot;&nbsp; Area: Dev &nbsp;&middot;&nbsp; RP Capacity: 15 RP/sprint</p>
+      </div>
+    </div>
+    <div class="collab-stats">
+      <div class="collab-stat"><div class="num">75%</div><div class="lbl">Asignado</div></div>
+      <div class="collab-stat"><div class="num danger">25%</div><div class="lbl">Sin Asignar</div></div>
+      <div class="collab-stat"><div class="num">11.3</div><div class="lbl">RP Planificados</div></div>
+      <div class="collab-stat"><div class="num">2</div><div class="lbl">Proyectos</div></div>
+    </div>
+    <div class="collab-progress">
+      <div class="bar-bg">
+        <div class="bar-fill" style="width:25%;background:#3b82f6" title="Portal Acme 25%"></div>
+        <div class="bar-fill" style="width:50%;background:#10b981" title="API Pagos 50%"></div>
+        <div class="bar-fill" style="width:25%;background:#dc2626;opacity:.2" title="Sin Asignar 25%"></div>
+      </div>
+      <div class="bar-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>Portal Acme (25%)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>API Pagos (50%)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#dc2626;opacity:.3"></div>Sin Asignar (25%)</div>
+      </div>
+    </div>
+    <table class="collab-table">
+      <thead><tr><th>Proyecto</th><th>Codigo</th><th>Cliente</th><th>% Asignado</th><th>RP Planif.</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600">Portal Cliente Acme</td>
+          <td class="proj-code">CLI-PA-DEV</td>
+          <td>Acme Corp</td>
+          <td><span class="pct">25%</span><span class="pct-bar"><span class="pct-bar-fill" style="width:25%;background:#3b82f6"></span></span></td>
+          <td>3.8 RP</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600">API Pagos TechFin</td>
+          <td class="proj-code">TFN-US-DEV</td>
+          <td>TechFin SA</td>
+          <td><span class="pct">50%</span><span class="pct-bar"><span class="pct-bar-fill" style="width:50%;background:#10b981"></span></span></td>
+          <td>7.5 RP</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="text-align:right;padding-right:16px">Total asignado</td>
+          <td><span class="pct">75%</span></td>
+          <td>11.3 RP</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="text-align:right;padding-right:16px;color:var(--red);font-weight:800">Sin Asignar</td>
+          <td><span class="pct" style="color:var(--red)">25%</span></td>
+          <td style="color:var(--red)">3.8 RP</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <div style="margin-top:16px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius-sm);padding:12px 16px;font-size:11px;color:var(--amber)">
+    <strong>Vista read-only</strong> — El colaborador ve su asignacion pero no puede editarla. Los cambios los realizan los EL/PO/TL durante las sesiones de planificacion.
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- VIEW 3: LOCKED + CR -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="view-locked" class="section-panel">
+<div class="toolbar" style="background:#fef2f2">
+  <button class="tbtn" disabled style="opacity:.5">+ Nuevo Periodo</button>
+  <button class="tbtn" disabled style="opacity:.5">Activar</button>
+  <button class="tbtn" disabled style="opacity:.5">Lockear</button>
+  <button class="tbtn">Exportar CSV</button>
+  <div class="sep"></div>
+  <button class="tbtn" onclick="document.getElementById('crPanel').style.display='block'">CR Pendientes <span class="count-badge">2</span></button>
+  <div class="auto-dump">
+    Periodo: <strong>Q1-S1 (Mar 4 - Mar 17)</strong> &nbsp;<span class="status-dot status-locked"></span><span style="color:var(--red);font-weight:700">LOCKED</span>
+  </div>
+</div>
+
+<div style="background:#fef2f2;border-bottom:1px solid var(--red-border);padding:10px 32px;font-size:11px;color:var(--red);font-weight:600;display:flex;align-items:center;gap:8px">
+  <span style="font-size:16px">&#128274;</span> Periodo lockeado — Las celdas son de solo lectura. Hace click en cualquier celda para solicitar un Change Request.
+</div>
+
+<div class="grid-panel" style="margin-top:0;border-radius:0">
+<div class="grid-wrap" style="max-height:300px">
+<table class="grid hide-rp">
+  <thead>
+    <tr class="hdr-row">
+      <th class="frozen col-name">Colaborador</th>
+      <th class="frozen col-sen">Sen.</th>
+      <th class="frozen col-area">Area</th>
+      <th class="frozen col-rp">RP C</th>
+      <th class="frozen col-sa">Sin Asg</th>
+      <th class="col-proj"><div class="hdr-code">CLI-PA-DEV</div><div class="hdr-name">Portal Acme</div><div class="hdr-total">&Sigma; 275%</div></th>
+      <th class="col-proj"><div class="hdr-code">TFN-US-DEV</div><div class="hdr-name">API Pagos</div><div class="hdr-total">&Sigma; 180%</div></th>
+      <th class="col-proj"><div class="hdr-code">DMX-PA-DAT</div><div class="hdr-name">Data Pipeline</div><div class="hdr-total">&Sigma; 155%</div></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="data-row">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-data-accent)">AG</div><div class="info"><span class="nm">Ana Garcia</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Sr</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Data</td>
+      <td class="frozen col-rp" style="font-weight:700">20</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-ok">0%</div></td>
+      <td class="data-cell locked col-proj" onclick="showCRModal()" style="cursor:pointer"><div class="val" style="color:#9ca3af">50</div></td>
+      <td class="data-cell locked col-proj" style="border:2px dashed var(--amber) !important;cursor:pointer" onclick="showCRModal()"><div class="val" style="color:#9ca3af">25</div><div style="position:absolute;top:-1px;right:2px;font-size:7px;color:var(--amber);font-weight:800">CR</div></td>
+      <td class="data-cell locked col-proj" onclick="showCRModal()" style="cursor:pointer"><div class="val" style="color:#9ca3af">25</div></td>
+    </tr>
+    <tr class="data-row">
+      <td class="frozen col-name"><div class="name-cell"><div class="avatar" style="background:var(--area-dev-accent)">PL</div><div class="info"><span class="nm">Pedro Lopez</span></div></div></td>
+      <td class="frozen col-sen" style="font-size:10px;color:var(--muted)">Mid</td>
+      <td class="frozen col-area" style="font-size:10px;color:var(--muted)">Dev</td>
+      <td class="frozen col-rp" style="font-weight:700">15</td>
+      <td class="frozen col-sa"><div class="val sa-cell sa-warn">25%</div></td>
+      <td class="data-cell locked col-proj" onclick="showCRModal()" style="cursor:pointer"><div class="val" style="color:#9ca3af">25</div></td>
+      <td class="data-cell locked col-proj" onclick="showCRModal()" style="cursor:pointer"><div class="val" style="color:#9ca3af">50</div></td>
+      <td class="data-cell locked col-proj" onclick="showCRModal()" style="cursor:pointer"><div class="val" style="color:#9ca3af"></div></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+<!-- CR Panel -->
+<div id="crPanel" style="display:none;margin:24px;background:#fff;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-md)">
+  <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <div style="font-family:var(--ft);font-size:14px;font-weight:800">Change Requests Pendientes</div>
+    <button onclick="document.getElementById('crPanel').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)">&times;</button>
+  </div>
+  <div style="padding:20px 24px">
+    <!-- CR #1 -->
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-family:var(--ft);font-size:12px;font-weight:700">CR #42 — <span style="color:var(--muted);font-weight:400">Solicitado por Pedro Lopez - hace 2h</span></div>
+        <span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)">PENDING</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"Ana fue reasignada al proyecto Data Pipeline por decision de la sesion del jueves."</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="background:var(--bg);border-radius:6px;padding:6px 10px;font-size:10px"><strong>Ana Garcia</strong>: API Pagos <span style="color:var(--red)">25% &rarr; 0%</span></div>
+        <div style="background:var(--bg);border-radius:6px;padding:6px 10px;font-size:10px"><strong>Ana Garcia</strong>: Data Pipeline <span style="color:var(--green)">25% &rarr; 50%</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
+        <strong>Impacto</strong>: Ana Garcia — Sin Asignar: 0% &rarr; 0% (sin cambio) - API Pagos: FTE 1.80 &rarr; 1.55 - Data Pipeline: FTE 1.55 &rarr; 1.80
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="tbtn" onclick="showToast('CR #42 rechazada')">Rechazar</button>
+        <button class="tbtn primary" onclick="showToast('CR #42 aprobada y aplicada. Slack: notificacion enviada a EL/PO.')">Aprobar y Aplicar</button>
+      </div>
+    </div>
+    <!-- CR #2 -->
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-family:var(--ft);font-size:12px;font-weight:700">CR #43 — <span style="color:var(--muted);font-weight:400">Solicitado por Valentina Sosa - hace 45min</span></div>
+        <span style="font-size:9px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)">PENDING</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"Se necesita a Laura Mendez al 25% en Portal Acme para el hotfix del deploy del martes."</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="background:var(--bg);border-radius:6px;padding:6px 10px;font-size:10px"><strong>Laura Mendez</strong>: Portal Acme <span style="color:var(--green)">0% &rarr; 25%</span></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">
+        <strong>Impacto</strong>: Laura Mendez — Sin Asignar: 40% &rarr; 15% - Portal Acme: FTE 2.75 &rarr; 3.00
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="tbtn" onclick="showToast('CR #43 rechazada')">Rechazar</button>
+        <button class="tbtn primary" onclick="showToast('CR #43 aprobada y aplicada. Slack: notificacion enviada a EL/PO.')">Aprobar y Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- VIEW 4: FILTERS DEMO -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="view-filters" class="section-panel">
+<div style="padding:32px">
+  <div style="font-family:var(--ft);font-size:14px;font-weight:800;color:var(--m0);margin-bottom:6px">Filtros de Columnas — Demo</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:20px;max-width:700px">
+    Los filtros de columnas (Cliente, Tipo de proyecto) ocultan/muestran columnas de la grilla. Los totales se recalculan sobre las columnas visibles. Proba los filtros en el tab "Grilla de Planificacion" para verlos en accion.
+  </div>
+
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;flex:1;min-width:280px;box-shadow:var(--shadow-sm)">
+      <div style="font-family:var(--ft);font-size:11px;font-weight:700;color:var(--m0);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Filtro: Cliente = "Acme Corp"</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Solo muestra las 2 columnas de proyectos de Acme Corp:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px">CLI-PA-DEV Portal Acme</span>
+        <span style="background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px">CLI-PA-DAT Analytics</span>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--m1);font-weight:600">Mostrando 2 de 9 proyectos (filtro activo)</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;flex:1;min-width:280px;box-shadow:var(--shadow-sm)">
+      <div style="font-family:var(--ft);font-size:11px;font-weight:700;color:var(--m0);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Filtro: Tipo = "Non-Billable"</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Solo muestra proyectos no facturables:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px">STR-INT-OPS Ops Interna</span>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--m1);font-weight:600">Mostrando 1 de 9 proyectos (filtro activo)</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;flex:1;min-width:280px;box-shadow:var(--shadow-sm)">
+      <div style="font-family:var(--ft);font-size:11px;font-weight:700;color:var(--m0);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Filtro combinado: Acme + Billable</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Filtros aditivos — Cliente "Acme" Y Tipo "Billable":</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="background:var(--green-bg);color:var(--green);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px">CLI-PA-DEV Portal Acme</span>
+        <span style="background:var(--green-bg);color:var(--green);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px">CLI-PA-DAT Analytics</span>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--m1);font-weight:600">Mostrando 2 de 9 proyectos (filtro activo)</div>
+    </div>
+  </div>
+
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm)">
+    <div style="font-family:var(--ft);font-size:11px;font-weight:700;color:var(--m0);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Resumen de filtros disponibles</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="border-bottom:2px solid var(--border)">
+        <th style="text-align:left;padding:8px;font-weight:700;font-size:10px;color:var(--muted)">Filtro</th>
+        <th style="text-align:left;padding:8px;font-weight:700;font-size:10px;color:var(--muted)">Aplica a</th>
+        <th style="text-align:left;padding:8px;font-weight:700;font-size:10px;color:var(--muted)">Tipo</th>
+        <th style="text-align:left;padding:8px;font-weight:700;font-size:10px;color:var(--muted)">Comportamiento</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:8px;font-weight:600">Buscar colaborador</td><td style="padding:8px"><span style="background:var(--green-bg);color:var(--green);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">FILAS</span></td><td style="padding:8px">Text search</td><td style="padding:8px;color:var(--muted)">Filtra filas por nombre</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:8px;font-weight:600">Seniority</td><td style="padding:8px"><span style="background:var(--green-bg);color:var(--green);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">FILAS</span></td><td style="padding:8px">Multi-select</td><td style="padding:8px;color:var(--muted)">Jr, Mid, Sr, Lead</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:8px;font-weight:600">Area</td><td style="padding:8px"><span style="background:var(--green-bg);color:var(--green);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">FILAS</span></td><td style="padding:8px">Multi-select</td><td style="padding:8px;color:var(--muted)">Agile, Cloud, Data, Dev, PM, QA</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:8px;font-weight:600">Solo sin asignar</td><td style="padding:8px"><span style="background:var(--green-bg);color:var(--green);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">FILAS</span></td><td style="padding:8px">Toggle</td><td style="padding:8px;color:var(--muted)">Muestra solo quienes tienen Sin Asignar > 0%</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:8px;font-weight:600">Cliente</td><td style="padding:8px"><span style="background:var(--blue-bg);color:var(--blue);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">COLUMNAS</span></td><td style="padding:8px">Multi-select</td><td style="padding:8px;color:var(--muted)">Filtra columnas por cliente del proyecto</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:8px;font-weight:600">Tipo proyecto</td><td style="padding:8px"><span style="background:var(--blue-bg);color:var(--blue);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">COLUMNAS</span></td><td style="padding:8px">Multi-select</td><td style="padding:8px;color:var(--muted)">Billable, Non-Billable, Internal</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6"><td style="padding:8px;font-weight:600">Proyecto</td><td style="padding:8px"><span style="background:var(--blue-bg);color:var(--blue);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">COLUMNAS</span></td><td style="padding:8px">Multi-select</td><td style="padding:8px;color:var(--muted)">Seleccion directa de proyectos</td></tr>
+        <tr><td style="padding:8px;font-weight:600">Mis proyectos</td><td style="padding:8px"><span style="background:var(--blue-bg);color:var(--blue);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">COLUMNAS</span></td><td style="padding:8px">Toggle</td><td style="padding:8px;color:var(--muted)">Solo proyectos donde soy EL/PO/TL</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- CONFLICT MODAL -->
+<div class="modal-overlay" id="conflictModal">
+  <div class="modal">
+    <h3>Conflicto de edicion</h3>
+    <p>Albi Martinez cambio esta celda mientras editabas. Tu valor no fue guardado.</p>
+    <div class="conflict-vals">
+      <div class="conflict-val theirs">
+        <div class="label">Valor de Albi</div>
+        <div class="num" style="color:var(--blue)">30%</div>
+        <div class="by">Guardado hace 3s</div>
+      </div>
+      <div class="conflict-val yours">
+        <div class="label">Tu valor</div>
+        <div class="num" style="color:var(--red)">25%</div>
+        <div class="by">No guardado</div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-retry" onclick="closeConflict()">Reintentar mi valor</button>
+      <button class="btn-accept" onclick="closeConflict(); showToast('Valor de Albi aceptado: 30%')">Aceptar valor de Albi</button>
+    </div>
+  </div>
+</div>
+
+<!-- CR REQUEST MODAL -->
+<div class="modal-overlay" id="crModal">
+  <div class="modal cr-modal">
+    <h3 style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">&#128274;</span> Solicitar Change Request</h3>
+    <p>El periodo esta lockeado. Tu cambio sera revisado por un ADMIN antes de aplicarse.</p>
+    <div class="cr-cell-info">
+      <strong>Celda:</strong> Ana Garcia &rarr; Portal Acme (CLI-PA-DEV)<br>
+      <strong>Valor actual:</strong> 50%
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Nuevo valor</label>
+      <select class="filter-select" style="width:100%;margin-top:4px">
+        <option>30%</option><option>25%</option><option>20%</option><option>15%</option><option>10%</option><option>5%</option><option>0%</option>
+      </select>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Razon del cambio</label>
+      <textarea style="margin-top:4px" placeholder="Ej: Ana fue reasignada al proyecto Data Pipeline..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="tbtn" onclick="closeCRModal()">Cancelar</button>
+      <button class="tbtn primary" onclick="closeCRModal(); showToast('CR enviada. El ADMIN sera notificado para revision.')">Enviar Solicitud</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- > 100% MODAL -->
+<div class="modal-overlay" id="overModal">
+  <div class="modal">
+    <h3 style="color:var(--red)">No se puede asignar</h3>
+    <p>El colaborador ya tiene <strong>85%</strong> asignado. El maximo disponible es <strong>15%</strong>.</p>
+    <p style="font-size:11px;margin-top:8px">Valor ingresado: 20% — Total resultante: 105% (excede 100%)</p>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn-accept" onclick="document.getElementById('overModal').classList.remove('show')">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── VIEW SWITCHING ──
+function switchView(view) {
+  document.querySelectorAll('.section-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.vtab').forEach(function(t) { t.classList.remove('active'); });
+  document.getElementById('view-' + view).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── RP COLUMN TOGGLE ──
+function toggleRPColumn() {
+  var grid = document.getElementById('mainGrid');
+  var btn = document.getElementById('toggleRP');
+  grid.classList.toggle('hide-rp');
+  if (grid.classList.contains('hide-rp')) {
+    btn.classList.remove('active');
+    btn.textContent = 'Mostrar RP';
+  } else {
+    btn.classList.add('active');
+    btn.textContent = 'Ocultar RP';
+  }
+}
+
+// ── METRICS TOGGLE ──
+var metricsCollapsed = true;
+function toggleMetrics() {
+  var grid = document.getElementById('mainGrid');
+  var btn = document.getElementById('toggleMetrics');
+  metricsCollapsed = !metricsCollapsed;
+  if (metricsCollapsed) {
+    grid.classList.add('metrics-collapsed');
+    btn.innerHTML = 'Metricas &#9656;';
+    btn.classList.remove('active');
+  } else {
+    grid.classList.remove('metrics-collapsed');
+    btn.innerHTML = 'Metricas &#9662;';
+    btn.classList.add('active');
+  }
+}
+// Default collapsed
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('mainGrid').classList.add('metrics-collapsed');
+});
+
+// ── CELL EDITING ──
+var editingCell = null;
+function editCell(cell) {
+  if (editingCell) cancelEdit();
+  var val = cell.querySelector('.val');
+  var current = val.textContent.trim() || '0';
+  cell._oldVal = val.textContent.trim();
+  editingCell = cell;
+  cell.classList.add('editing');
+  val.innerHTML = '<input type="number" value="' + current + '" min="0" max="100" step="5" onkeydown="handleKey(event, this)" onblur="confirmEdit(this)">';
+  val.querySelector('input').focus();
+  val.querySelector('input').select();
+}
+
+function handleKey(e, input) {
+  if (e.key === 'Enter') { e.preventDefault(); confirmEdit(input); }
+  else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+  else if (e.key === 'Tab') {
+    e.preventDefault();
+    var currentCell = editingCell;
+    confirmEdit(input);
+    // Move to next editable cell
+    var next = currentCell ? currentCell.nextElementSibling : null;
+    if (next && next.classList.contains('editable')) editCell(next);
+  }
+}
+
+function confirmEdit(input) {
+  if (!editingCell) return;
+  var val = parseInt(input.value) || 0;
+  // Snap to 5%
+  val = Math.round(val / 5) * 5;
+  if (val < 0) val = 0;
+  if (val > 100) val = 100;
+
+  // Check sum
+  var row = editingCell.closest('tr');
+  var cells = row.querySelectorAll('.data-cell .val');
+  var sum = 0;
+  cells.forEach(function(c) {
+    if (c.closest('.data-cell') === editingCell) {
+      sum += val;
+    } else {
+      sum += parseInt(c.textContent) || 0;
+    }
+  });
+
+  if (sum > 100) {
+    editingCell.querySelector('.val').textContent = editingCell._oldVal || '';
+    editingCell.classList.remove('editing');
+    document.getElementById('overModal').classList.add('show');
+    editingCell = null;
+    return;
+  }
+
+  // Random: 10% chance of conflict for demo
+  if (Math.random() < 0.1 && val > 0) {
+    editingCell.querySelector('.val').textContent = editingCell._oldVal || '';
+    editingCell.classList.remove('editing');
+    document.getElementById('conflictModal').classList.add('show');
+    editingCell = null;
+    return;
+  }
+
+  editingCell.querySelector('.val').textContent = val > 0 ? val : '';
+  editingCell.classList.remove('editing');
+
+  // Update Sin Asignar
+  updateRowSummary(row);
+
+  // Toast
+  showToast('Guardado: ' + val + '% -- SSE broadcast enviado');
+  editingCell = null;
+}
+
+function cancelEdit() {
+  if (!editingCell) return;
+  editingCell.querySelector('.val').textContent = editingCell._oldVal || '';
+  editingCell.classList.remove('editing');
+  editingCell = null;
+}
+
+function updateRowSummary(row) {
+  var cells = row.querySelectorAll('.data-cell .val');
+  var sum = 0;
+  cells.forEach(function(c) { sum += parseInt(c.textContent) || 0; });
+  var sa = 100 - sum;
+  var saCell = row.querySelector('.col-sa .val');
+  if (saCell) {
+    saCell.textContent = sa + '%';
+    saCell.className = 'val sa-cell ' + (sa > 0 ? 'sa-warn' : 'sa-ok');
+  }
+}
+
+// ── FILTERS ──
+function filterGrid() {
+  var search = document.getElementById('searchCollab').value.toLowerCase();
+  var sen = document.getElementById('filterSeniority').value;
+  var area = document.getElementById('filterArea').value;
+  var onlyUnassigned = document.getElementById('toggleUnassigned').classList.contains('active');
+
+  // Track which areas have visible rows
+  var visibleAreas = {};
+
+  document.querySelectorAll('#mainGrid .data-row').forEach(function(row) {
+    var name = (row.dataset.name || '').toLowerCase();
+    var rowSen = row.dataset.sen || '';
+    var rowArea = row.dataset.area || '';
+    var saText = row.querySelector('.col-sa .val') ? row.querySelector('.col-sa .val').textContent : '0%';
+    var saVal = parseInt(saText);
+
+    var show = true;
+    if (search && !name.includes(search)) show = false;
+    if (sen && rowSen !== sen) show = false;
+    if (area && rowArea !== area) show = false;
+    if (onlyUnassigned && saVal <= 0) show = false;
+
+    row.style.display = show ? '' : 'none';
+    if (show) visibleAreas[rowArea] = true;
+  });
+
+  // Show/hide area group rows based on visible data rows
+  document.querySelectorAll('#mainGrid .area-group-row').forEach(function(agr) {
+    var areaName = agr.querySelector('td').textContent.trim();
+    agr.style.display = visibleAreas[areaName] ? '' : 'none';
+  });
+
+  updateFilterIndicator();
+}
+
+function filterProjectCols() {
+  var client = document.getElementById('filterClient').value;
+  var type = document.getElementById('filterType').value;
+
+  var headerCells = document.querySelectorAll('#mainGrid thead .col-proj');
+  var colIndices = [];
+
+  headerCells.forEach(function(th) {
+    var thClient = th.dataset.client || '';
+    var thType = th.dataset.type || '';
+    var show = true;
+    if (client && thClient !== client) show = false;
+    if (type && thType !== type) show = false;
+    th.style.display = show ? '' : 'none';
+    colIndices.push(show);
+  });
+
+  // Apply to all body rows
+  document.querySelectorAll('#mainGrid tbody tr').forEach(function(row) {
+    var projCells = row.querySelectorAll('.col-proj');
+    projCells.forEach(function(td, i) {
+      if (i < colIndices.length) {
+        td.style.display = colIndices[i] ? '' : 'none';
+      }
+    });
+  });
+  updateFilterIndicator();
+}
+
+function toggleFilter(el) {
+  el.classList.toggle('active');
+  filterGrid();
+}
+
+function updateFilterIndicator() {
+  var client = document.getElementById('filterClient').value;
+  var type = document.getElementById('filterType').value;
+  var ind = document.getElementById('filterIndicator');
+
+  var visibleCols = document.querySelectorAll('#mainGrid thead .col-proj:not([style*="display: none"])').length;
+  var totalCols = document.querySelectorAll('#mainGrid thead .col-proj').length;
+
+  if (client || type) {
+    ind.textContent = 'Mostrando ' + visibleCols + ' de ' + totalCols + ' proyectos (filtro activo)';
+  } else {
+    ind.textContent = '';
+  }
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(function() { t.style.display = 'none'; }, 3000);
+}
+
+// ── MODALS ──
+function closeConflict() { document.getElementById('conflictModal').classList.remove('show'); }
+function showCRModal() { document.getElementById('crModal').classList.add('show'); }
+function closeCRModal() { document.getElementById('crModal').classList.remove('show'); }
+</script>
+
+</div><!-- /m3-wrap -->
+</body>
+</html>

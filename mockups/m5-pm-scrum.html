@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M5 — PM Scrum · StrataPMS</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Kanban */
+.kanban { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 12px; }
+.kanban-col { flex: 0 0 260px; min-width: 260px; }
+.kanban-header { padding: 10px 12px; border-radius: 8px 8px 0 0; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+.kanban-header .count { background: rgba(255,255,255,0.35); border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+.kanban-body { background: #f5f6fa; border: 1px solid var(--light-silver); border-top: none; border-radius: 0 0 8px 8px; padding: 8px; min-height: 300px; display: flex; flex-direction: column; gap: 8px; }
+.kanban-card { background: white; border: 1px solid var(--light-silver); border-radius: 8px; padding: 12px; cursor: pointer; transition: box-shadow 0.15s; }
+.kanban-card:hover { box-shadow: 0 2px 8px rgba(16,7,160,0.1); }
+.kanban-card-code { font-size: 10px; font-family: 'Courier New', monospace; color: var(--cool-grey); margin-bottom: 4px; }
+.kanban-card-title { font-size: 13px; font-weight: 500; color: #1a1a2e; margin-bottom: 8px; line-height: 1.4; }
+.kanban-card-footer { display: flex; align-items: center; gap: 6px; }
+.sp-chip { font-size: 10px; font-weight: 700; background: #e8eeff; color: var(--neon-blue); padding: 2px 6px; border-radius: 4px; }
+.er-chip { font-size: 10px; font-weight: 700; background: #f0eaff; color: var(--amethyst); padding: 2px 6px; border-radius: 4px; }
+.avatar-xs { width: 20px; height: 20px; border-radius: 50%; background: var(--bleu-france); color: white; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-left: auto; }
+
+/* Backlog */
+.epic-row { background: linear-gradient(90deg, var(--bg) 0%, white 100%); border-left: 3px solid var(--amethyst); padding: 10px 14px; margin-bottom: 2px; font-weight: 600; cursor: pointer; border-radius: 0 6px 6px 0; display: flex; align-items: center; gap: 8px; }
+.us-row { padding: 9px 14px 9px 32px; border-bottom: 1px solid #f0f1f5; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.us-row:hover { background: #fafbff; }
+.us-id { font-family: 'Courier New', monospace; font-size: 11px; color: var(--cool-grey); min-width: 80px; }
+
+/* Sprint header */
+.sprint-header {
+  background: linear-gradient(135deg, var(--neon-blue) 0%, var(--ocean-blue) 100%);
+  border-radius: 10px;
+  padding: 16px 20px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.sprint-progress-outer { flex: 1; max-width: 200px; height: 8px; background: rgba(255,255,255,0.25); border-radius: 4px; }
+.sprint-progress-inner { height: 100%; border-radius: 4px; background: white; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div><span>STRATA</span><span class="logo-sub">PMS TimeJuggle 2.0</span></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Módulos</div>
+    <a href="m0-core-platform.html" class="sidebar-item">⚙️ M0 Core Platform</a>
+    <a href="m1-colaboradores.html" class="sidebar-item">👥 M1 Colaboradores</a>
+    <a href="m2-project-registry.html" class="sidebar-item">📁 M2 Proyectos</a>
+    <a href="../m3-demand-planning-mockup.html" class="sidebar-item">📊 M3 Demand Planning</a>
+    <a href="m4-timejuggle.html" class="sidebar-item">⏱ M4 TimeJuggle</a>
+    <a href="m5-pm-scrum.html" class="sidebar-item active">🏃 M5 PM Scrum</a>
+    <a href="m6-billing.html" class="sidebar-item">💳 M6 Billing</a>
+    <a href="m7-kpis.html" class="sidebar-item">📈 M7 KPIs</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="avatar-sm">MP</div>
+    <div class="avatar-info"><div class="avatar-name">María Pérez</div><div class="avatar-role">PO</div></div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-breadcrumb"><span>M5</span> / PM Scrum / <span style="color:var(--neon-blue)">BNA-PAN-CLD-2026-004</span></div>
+      <div class="topbar-title">Cloud Migration Phase 2</div>
+    </div>
+    <div class="topbar-actions">
+      <select class="filter-select">
+        <option>BNA-PAN-CLD-2026-004</option>
+        <option>PQS-ARG-DAT-2026-001</option>
+        <option>TCI-USA-CLD-2026-001</option>
+      </select>
+      <button class="btn btn-primary">+ Nueva US</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- Sprint header -->
+    <div class="sprint-header">
+      <div>
+        <div style="font-size:11px;opacity:0.7;font-weight:600;letter-spacing:1px;text-transform:uppercase">Sprint activo</div>
+        <div style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;margin-top:2px">Sprint 3 · Mar 3 – Mar 30, 2026</div>
+      </div>
+      <div>
+        <div style="font-size:11px;opacity:0.7;margin-bottom:4px">Progreso (SP entregados / comprometidos)</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="sprint-progress-outer"><div class="sprint-progress-inner" style="width:35%"></div></div>
+          <span style="font-weight:700;font-size:15px">56/160 SP</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;opacity:0.7;margin-bottom:4px">ER planificados</div>
+        <div style="font-weight:700;font-size:15px">2,400 pts</div>
+      </div>
+      <div>
+        <div style="font-size:11px;opacity:0.7;margin-bottom:4px">Días restantes</div>
+        <div style="font-weight:700;font-size:15px">11 días</div>
+      </div>
+      <div style="margin-left:auto"><button class="btn btn-secondary btn-sm">⚙️ Config sprint</button></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('board', this)">Board</div>
+      <div class="tab" onclick="showTab('backlog', this)">Backlog</div>
+      <div class="tab" onclick="showTab('sprints', this)">Sprints</div>
+      <div class="tab" onclick="showTab('risks', this)">Riesgos</div>
+      <div class="tab" onclick="showTab('team', this)">Equipo</div>
+    </div>
+
+    <!-- TAB: Board -->
+    <div id="tab-board" class="tab-content active">
+      <div class="kanban">
+
+        <div class="kanban-col">
+          <div class="kanban-header" style="background:var(--cool-grey);color:white">
+            BACKLOG / TODO <span class="count">8</span>
+          </div>
+          <div class="kanban-body">
+            <div class="kanban-card">
+              <div class="kanban-card-code">BNA-004-US-018</div>
+              <div class="kanban-card-title">Configurar IAM roles para entornos prod</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">8 SP</span><span class="er-chip">40 ER</span>
+                <span class="badge badge-violet" style="font-size:10px">Cloud</span>
+                <div class="avatar-xs">AG</div>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-code">BNA-004-US-019</div>
+              <div class="kanban-card-title">Documentar runbooks de DR</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">5 SP</span><span class="er-chip">24 ER</span>
+                <span class="badge badge-grey" style="font-size:10px">Docs</span>
+                <div class="avatar-xs">RL</div>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-code">BNA-004-US-020</div>
+              <div class="kanban-card-title">Tests de performance en ambiente staging</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">13 SP</span><span class="er-chip">64 ER</span>
+                <span class="badge badge-green" style="font-size:10px">QA</span>
+                <div class="avatar-xs">CS</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-col">
+          <div class="kanban-header" style="background:var(--bleu-france);color:white">
+            IN PROGRESS <span class="count">4</span>
+          </div>
+          <div class="kanban-body">
+            <div class="kanban-card">
+              <div class="kanban-card-code">BNA-004-US-014</div>
+              <div class="kanban-card-title">Migrar base de datos Oracle → Cloud SQL</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">21 SP</span><span class="er-chip">120 ER</span>
+                <span class="badge badge-blue" style="font-size:10px">DB</span>
+                <div class="avatar-xs">JT</div>
+              </div>
+            </div>
+            <div class="kanban-card">
+              <div class="kanban-card-code">BNA-004-US-015</div>
+              <div class="kanban-card-title">Configurar VPC peering entre regiones</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">8 SP</span><span class="er-chip">48 ER</span>
+                <span class="badge badge-violet" style="font-size:10px">Cloud</span>
+                <div class="avatar-xs">AG</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-col">
+          <div class="kanban-header" style="background:var(--amethyst);color:white">
+            REVIEW / QA <span class="count">3</span>
+          </div>
+          <div class="kanban-body">
+            <div class="kanban-card">
+              <div class="kanban-card-code">BNA-004-US-012</div>
+              <div class="kanban-card-title">Setup Terraform IaC para ambientes</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">13 SP</span><span class="er-chip">80 ER</span>
+                <span class="badge badge-sky" style="font-size:10px">DevOps</span>
+                <div class="avatar-xs">AG</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-col">
+          <div class="kanban-header" style="background:#27ae60;color:white">
+            DONE ✓ <span class="count">7</span>
+          </div>
+          <div class="kanban-body">
+            <div class="kanban-card" style="opacity:0.7">
+              <div class="kanban-card-code">BNA-004-US-008</div>
+              <div class="kanban-card-title">Inventario de servicios on-premise</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">5 SP</span><span class="er-chip">24 ER</span>
+                <span class="badge badge-green" style="font-size:10px">✓ Completado</span>
+              </div>
+            </div>
+            <div class="kanban-card" style="opacity:0.7">
+              <div class="kanban-card-code">BNA-004-US-009</div>
+              <div class="kanban-card-title">Diseño arquitectura cloud target state</div>
+              <div class="kanban-card-footer">
+                <span class="sp-chip">13 SP</span><span class="er-chip">72 ER</span>
+                <span class="badge badge-green" style="font-size:10px">✓ Completado</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB: Backlog -->
+    <div id="tab-backlog" class="tab-content">
+      <div class="table-toolbar" style="margin-bottom:12px;background:white;border:1px solid var(--light-silver);border-radius:8px;padding:10px 14px">
+        <input class="search-input" placeholder="🔍  Buscar US, tarea…">
+        <select class="filter-select"><option>Todas las épicas</option><option>Épica: Infraestructura</option><option>Épica: Datos</option></select>
+        <select class="filter-select"><option>Todos los estados</option><option>Backlog</option><option>In Progress</option><option>Done</option></select>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto">+ Nueva épica</button>
+      </div>
+
+      <div class="table-wrapper">
+        <div class="epic-row">
+          <span style="color:var(--amethyst)">▼</span>
+          <span class="badge badge-violet">EPIC-01</span>
+          <span style="flex:1">Infraestructura Cloud</span>
+          <span class="badge badge-sky">12 US</span>
+          <span class="badge badge-blue">8 SP vendidos</span>
+        </div>
+        <div class="us-row">
+          <span class="us-id">US-001</span>
+          <span class="badge badge-green">Done</span>
+          <span style="flex:1">Como admin, quiero configurar VPC inicial con subnets públicas y privadas</span>
+          <span class="sp-chip">8 SP</span><span class="er-chip">48 ER</span>
+          <div class="avatar-xs">AG</div>
+        </div>
+        <div class="us-row">
+          <span class="us-id">US-002</span>
+          <span class="badge badge-green">Done</span>
+          <span style="flex:1">Como DevOps, quiero setup de CI/CD pipeline en Cloud Build</span>
+          <span class="sp-chip">5 SP</span><span class="er-chip">32 ER</span>
+          <div class="avatar-xs">RL</div>
+        </div>
+        <div class="us-row" style="background:#f0f6ff">
+          <span class="us-id">US-014</span>
+          <span class="badge badge-sky">In Progress</span>
+          <span style="flex:1">Como DBA, quiero migrar Oracle → Cloud SQL con zero downtime</span>
+          <span class="sp-chip">21 SP</span><span class="er-chip">120 ER</span>
+          <div class="avatar-xs">JT</div>
+        </div>
+        <div class="us-row">
+          <span class="us-id">US-015</span>
+          <span class="badge badge-sky">In Progress</span>
+          <span style="flex:1">Como Network Eng, quiero configurar VPC peering entre regiones</span>
+          <span class="sp-chip">8 SP</span><span class="er-chip">48 ER</span>
+          <div class="avatar-xs">AG</div>
+        </div>
+        <div class="us-row">
+          <span class="us-id">US-018</span>
+          <span class="badge badge-grey">Backlog</span>
+          <span style="flex:1">Como admin, quiero configurar IAM roles para todos los entornos</span>
+          <span class="sp-chip">8 SP</span><span class="er-chip">40 ER</span>
+          <div class="avatar-xs">AG</div>
+        </div>
+
+        <div class="epic-row" style="border-left-color:var(--bleu-france)">
+          <span style="color:var(--bleu-france)">▶</span>
+          <span class="badge badge-sky">EPIC-02</span>
+          <span style="flex:1">Observabilidad & Monitoreo</span>
+          <span class="badge badge-sky">6 US</span>
+          <span class="badge badge-blue">4 SP vendidos</span>
+        </div>
+        <div class="epic-row" style="border-left-color:var(--ocean-blue)">
+          <span style="color:var(--ocean-blue)">▶</span>
+          <span class="badge badge-grey">EPIC-03</span>
+          <span style="flex:1">Seguridad & Compliance</span>
+          <span class="badge badge-sky">4 US</span>
+          <span class="badge badge-blue">2 SP vendidos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Sprints -->
+    <div id="tab-sprints" class="tab-content">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Sprint</th><th>Período</th><th>US comprometidas</th><th>SP comprometidos</th><th>SP entregados</th><th>ER planificados</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sprint 3</strong></td><td>Mar 3 – Mar 30</td><td>12</td>
+              <td><strong>160</strong></td><td>56</td><td>2,400</td>
+              <td><span class="badge badge-sky">En curso</span></td>
+            </tr>
+            <tr>
+              <td><strong>Sprint 2</strong></td><td>Feb 3 – Feb 28</td><td>10</td>
+              <td><strong>120</strong></td><td>112</td><td>1,920</td>
+              <td><span class="badge badge-grey">Cerrado</span></td>
+            </tr>
+            <tr>
+              <td><strong>Sprint 1</strong></td><td>Ene 6 – Feb 2</td><td>8</td>
+              <td><strong>80</strong></td><td>80</td><td>1,280</td>
+              <td><span class="badge badge-grey">Cerrado</span></td>
+            </tr>
+            <tr style="opacity:0.6">
+              <td><strong>Sprint 4</strong></td><td>Abr 1 – Abr 30</td><td>—</td>
+              <td>—</td><td>—</td><td>—</td>
+              <td><span class="badge badge-grey">Planificado</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Riesgos -->
+    <div id="tab-risks" class="tab-content">
+      <div class="page-header">
+        <div class="page-title" style="font-size:18px">Gestión de Riesgos</div>
+        <button class="btn btn-primary">+ Nuevo riesgo</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Riesgo</th><th>Probabilidad</th><th>Impacto</th><th>Score</th><th>Plan de mitigación</th><th>Owner</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div style="font-weight:500">Downtime durante migración DB Oracle</div><div style="font-size:11px;color:var(--cool-grey)">Ventana de mantenimiento no confirmada</div></td>
+              <td><span class="badge badge-amber">Media (3)</span></td>
+              <td><span class="badge badge-red">Alto (5)</span></td>
+              <td><span class="badge badge-red" style="font-size:13px;padding:4px 10px">15</span></td>
+              <td style="font-size:12px">Migración incremental + CDC con Debezium</td>
+              <td>Juan T.</td>
+              <td><span class="badge badge-sky">Mitigando</span></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">Cambios en requerimientos de compliance BNA</div><div style="font-size:11px;color:var(--cool-grey)">Regulación bancaria en revisión</div></td>
+              <td><span class="badge badge-amber">Media (3)</span></td>
+              <td><span class="badge badge-amber">Medio (3)</span></td>
+              <td><span class="badge badge-amber" style="font-size:13px;padding:4px 10px">9</span></td>
+              <td style="font-size:12px">Monitoreo regulatorio quincenal</td>
+              <td>María P.</td>
+              <td><span class="badge badge-green">Monitoreado</span></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">Capacidad del equipo en Q2</div><div style="font-size:11px;color:var(--cool-grey)">Carlos Soto en licencia hasta Abr 15</div></td>
+              <td><span class="badge badge-red">Alta (4)</span></td>
+              <td><span class="badge badge-amber">Medio (3)</span></td>
+              <td><span class="badge badge-amber" style="font-size:13px;padding:4px 10px">12</span></td>
+              <td style="font-size:12px">Redistribuir en M3 Demand Planning</td>
+              <td>Alejandro G.</td>
+              <td><span class="badge badge-sky">Mitigando</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Equipo -->
+    <div id="tab-team" class="tab-content">
+      <div class="card">
+        <div class="card-title">ProjectTeamMember — BNA-PAN-CLD-2026-004</div>
+        <table>
+          <thead>
+            <tr><th>Colaborador</th><th>Rol en proyecto</th><th>Tier global</th><th>Permisos M3</th><th>Permisos M5</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Alejandro García</strong></td><td><span class="badge badge-blue">EL</span></td><td><span class="badge badge-blue">MANAGER_EL</span></td><td>Edita cualquier proyecto</td><td>EDITOR completo</td></tr>
+            <tr><td><strong>María Pérez</strong></td><td><span class="badge badge-sky">PO</span></td><td><span class="badge badge-sky">PO</span></td><td>Edita cualquier proyecto</td><td>EDITOR completo</td></tr>
+            <tr><td><strong>Juan Torres</strong></td><td><span class="badge badge-violet">TL</span></td><td><span class="badge badge-violet" style="background:#e3f0ff;color:var(--bleu-france)">TECH_LEAD</span></td><td>Solo sus proyectos</td><td>EDITOR en sus proyectos</td></tr>
+            <tr><td><strong>Rosa López</strong></td><td><span class="badge badge-green">DEV</span></td><td><span class="badge badge-grey">COLLABORATOR</span></td><td>Solo su fila (read-only)</td><td>VIEWER</td></tr>
+            <tr><td><strong>Carlos Soto</strong></td><td><span class="badge badge-green">DEV</span></td><td><span class="badge badge-grey">COLLABORATOR</span></td><td>Solo su fila (read-only)</td><td>VIEWER</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

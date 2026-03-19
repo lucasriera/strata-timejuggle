@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StrataPMS — Mockups</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); flex-direction: column; gap: 32px; }
+  .hub { max-width: 900px; width: 100%; padding: 40px 24px; }
+  .hub-header { text-align: center; margin-bottom: 40px; }
+  .hub-logo { font-family: 'Inter', sans-serif; font-size: 32px; font-weight: 800; color: var(--neon-blue); }
+  .hub-sub  { font-size: 14px; color: var(--cool-grey); margin-top: 4px; }
+  .modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .module-card {
+    background: white;
+    border: 1px solid var(--light-silver);
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    display: block;
+    transition: all 0.2s;
+    border-top: 4px solid var(--neon-blue);
+  }
+  .module-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(16,7,160,0.12); border-top-color: var(--bleu-france); }
+  .module-card.sky   { border-top-color: var(--bleu-france); }
+  .module-card.amethyst { border-top-color: var(--amethyst); }
+  .module-card.ocean { border-top-color: var(--ocean-blue); }
+  .module-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--bleu-france); margin-bottom: 6px; }
+  .module-name { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+  .module-desc { font-size: 12px; color: var(--cool-grey); line-height: 1.5; }
+  .module-status { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; font-size: 11px; font-weight: 600; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-green { background: #27ae60; }
+  .dot-amber { background: #f39c12; }
+  .footer-note { text-align: center; font-size: 12px; color: var(--cool-grey); margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="hub">
+  <div class="hub-header">
+    <div class="hub-logo">STRATA PMS</div>
+    <div class="hub-sub">TimeJuggle 2.0 — Mockups v1 · Marzo 2026</div>
+  </div>
+
+  <div class="modules-grid">
+    <a href="m0-core-platform.html" class="module-card">
+      <div class="module-tag">M0</div>
+      <div class="module-name">Core Platform</div>
+      <div class="module-desc">Auth Google, RBAC 3 niveles, admin de catálogos, audit log, notificaciones</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+
+    <a href="m1-colaboradores.html" class="module-card sky">
+      <div class="module-tag">M1</div>
+      <div class="module-name">Colaboradores</div>
+      <div class="module-desc">People master: capacidad RP, cost rate, seniority, área, manager</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+
+    <a href="m2-project-registry.html" class="module-card amethyst">
+      <div class="module-tag">M2 ⭐ MVP</div>
+      <div class="module-name">Project Registry</div>
+      <div class="module-desc">Proyectos, generador de códigos, POs, clientes, SP contratados</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+
+    <a href="../m3-demand-planning-mockup.html" class="module-card ocean">
+      <div class="module-tag">M3</div>
+      <div class="module-name">Demand Planning</div>
+      <div class="module-desc">Grilla quincenal colaboradores × proyectos × %. Real-time, SSE, AG Grid</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+
+    <a href="m4-timejuggle.html" class="module-card">
+      <div class="module-tag">M4</div>
+      <div class="module-name">TimeJuggle</div>
+      <div class="module-desc">% real semanal por proyecto. Reemplaza AppSheet. Debe sumar 100%</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+
+    <a href="m5-pm-scrum.html" class="module-card sky">
+      <div class="module-tag">M5</div>
+      <div class="module-name">PM Scrum</div>
+      <div class="module-desc">Backlog, epics, US, tasks, sprints, riesgos, SP+ER, ProjectTeamMember</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+
+    <a href="m6-billing.html" class="module-card amethyst">
+      <div class="module-tag">M6 ⭐ MVP</div>
+      <div class="module-name">Billing & Forecast</div>
+      <div class="module-desc">Facturas reales + forecast, seguimiento POs, multi-entidad, multi-moneda</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+
+    <a href="m7-kpis.html" class="module-card ocean">
+      <div class="module-tag">M7</div>
+      <div class="module-name">KPIs & Dashboards</div>
+      <div class="module-desc">12 KPIs clave. Performance = Facturado − Gasto Real. Análisis financiero</div>
+      <div class="module-status"><span class="status-dot dot-green"></span><span style="color:#27ae60">Mockup listo</span></div>
+    </a>
+  </div>
+
+  <div class="footer-note">
+    Mockups HTML v1 · Identidad Strata Analytics · Stack: Next.js 14, TypeScript, Tailwind, shadcn/ui, PostgreSQL
+  </div>
+</div>
+</body>
+</html>

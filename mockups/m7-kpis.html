@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M7 — KPIs & Dashboards · StrataPMS</title>
+<link rel="stylesheet" href="_shared.css">
+<style>
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* KPI cards grandes */
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-card {
+  background: white;
+  border: 1px solid var(--light-silver);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+}
+.kpi-blue::before { background: var(--neon-blue); }
+.kpi-sky::before { background: var(--bleu-france); }
+.kpi-green::before { background: #27ae60; }
+.kpi-amber::before { background: #f39c12; }
+.kpi-red::before { background: #e74c3c; }
+.kpi-amethyst::before { background: var(--amethyst); }
+
+.kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--cool-grey); margin-bottom: 6px; }
+.kpi-value { font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 800; color: #1a1a2e; line-height: 1; }
+.kpi-sub { font-size: 12px; color: var(--cool-grey); margin-top: 4px; }
+.kpi-delta { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 12px; font-weight: 600; }
+.kpi-delta.up { color: #27ae60; }
+.kpi-delta.down { color: #e74c3c; }
+.kpi-delta.neutral { color: var(--cool-grey); }
+
+.kpi-sparkline { height: 40px; margin-top: 10px; display: flex; align-items: flex-end; gap: 3px; }
+.spark-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 4px; background: var(--light-silver); }
+.spark-bar.active { background: var(--bleu-france); }
+
+/* Chart placeholder */
+.chart-placeholder {
+  background: var(--bg);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--cool-grey);
+  font-size: 13px;
+}
+
+/* Perf table */
+.perf-positive { color: #27ae60; font-weight: 700; }
+.perf-negative { color: #e74c3c; font-weight: 700; }
+
+/* Gauge */
+.gauge-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f1f5; }
+.gauge-label { min-width: 160px; font-size: 13px; color: #1a1a2e; }
+.gauge-track { flex: 1; height: 10px; background: var(--light-silver); border-radius: 5px; position: relative; }
+.gauge-fill { height: 100%; border-radius: 5px; }
+.gauge-val { min-width: 60px; text-align: right; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div><span>STRATA</span><span class="logo-sub">PMS TimeJuggle 2.0</span></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Módulos</div>
+    <a href="m0-core-platform.html" class="sidebar-item">⚙️ M0 Core Platform</a>
+    <a href="m1-colaboradores.html" class="sidebar-item">👥 M1 Colaboradores</a>
+    <a href="m2-project-registry.html" class="sidebar-item">📁 M2 Proyectos</a>
+    <a href="../m3-demand-planning-mockup.html" class="sidebar-item">📊 M3 Demand Planning</a>
+    <a href="m4-timejuggle.html" class="sidebar-item">⏱ M4 TimeJuggle</a>
+    <a href="m5-pm-scrum.html" class="sidebar-item">🏃 M5 PM Scrum</a>
+    <a href="m6-billing.html" class="sidebar-item">💳 M6 Billing</a>
+    <a href="m7-kpis.html" class="sidebar-item active">📈 M7 KPIs</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="avatar-sm">LR</div>
+    <div class="avatar-info"><div class="avatar-name">Lucas Rodríguez</div><div class="avatar-role">SUPERADMIN</div></div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div>
+      <div class="topbar-breadcrumb"><span>M7</span> / KPIs & Dashboards</div>
+      <div class="topbar-title">KPIs & Dashboards</div>
+    </div>
+    <div class="topbar-actions">
+      <select class="filter-select"><option>Mar 2026</option><option>Feb 2026</option><option>Ene 2026</option><option>Q1 2026</option></select>
+      <select class="filter-select"><option>Todos los proyectos</option><option>BNA-PAN-CLD-004</option><option>PQS-ARG-DAT-001</option></select>
+      <button class="btn btn-secondary btn-sm">Exportar PDF</button>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('overview', this)">Resumen ejecutivo</div>
+      <div class="tab" onclick="showTab('financial', this)">Performance financiera</div>
+      <div class="tab" onclick="showTab('capacity', this)">Capacidad & Utilización</div>
+      <div class="tab" onclick="showTab('delivery', this)">Entrega & Velocidad</div>
+    </div>
+
+    <!-- TAB: Resumen ejecutivo -->
+    <div id="tab-overview" class="tab-content active">
+
+      <!-- KPI principal -->
+      <div style="background: linear-gradient(135deg, var(--neon-blue) 0%, var(--deep-violet) 100%); border-radius: 14px; padding: 24px; color: white; margin-bottom: 24px; display: flex; gap: 32px; align-items: center;">
+        <div>
+          <div style="font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Performance = Facturado − Gasto Real</div>
+          <div style="font-family:'Inter',sans-serif;font-size:48px;font-weight:800;line-height:1">$+18,240</div>
+          <div style="font-size:14px;opacity:0.8;margin-top:4px">Margen neto — Marzo 2026</div>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.2);align-self:stretch"></div>
+        <div>
+          <div style="font-size:13px;opacity:0.8;margin-bottom:6px">Facturado real</div>
+          <div style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700">$84,000</div>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.2);align-self:stretch"></div>
+        <div>
+          <div style="font-size:13px;opacity:0.8;margin-bottom:6px">Gasto Real (TimeJuggle × Cost)</div>
+          <div style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700">$65,760</div>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.2);align-self:stretch"></div>
+        <div>
+          <div style="font-size:13px;opacity:0.8;margin-bottom:6px">Margen %</div>
+          <div style="font-family:'Inter',sans-serif;font-size:24px;font-weight:700">21.7%</div>
+        </div>
+      </div>
+
+      <!-- KPIs secundarios -->
+      <div class="kpi-grid">
+        <!-- Card 1: SP último sprint vendido vs entregado -->
+        <div class="kpi-card kpi-sky">
+          <div class="kpi-label">SP Último Sprint — Vendido vs Entregado</div>
+          <div style="display:flex;align-items:baseline;gap:6px;margin:4px 0 2px">
+            <span class="kpi-value" style="color:var(--neon-blue)">120</span>
+            <span style="font-size:13px;color:var(--cool-grey);font-weight:500">vendidos</span>
+            <span style="font-size:18px;color:var(--light-silver)">→</span>
+            <span class="kpi-value" style="color:#27ae60">128</span>
+            <span style="font-size:13px;color:var(--cool-grey);font-weight:500">entregados</span>
+          </div>
+          <div class="kpi-sub">Sprint 2 cerrado · <strong style="color:#27ae60">+8 SP sobrecutnplidos</strong></div>
+          <div style="margin:10px 0 4px">
+            <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;border:1px solid var(--light-silver)">
+              <div style="width:100%;background:#e3f0ff;position:relative">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:100%;background:var(--neon-blue);border-radius:5px 0 0 5px;opacity:0.3"></div>
+                <div style="position:absolute;left:0;top:0;bottom:0;width:106.7%;background:var(--bleu-france);border-radius:5px" title="128/120 = 106.7%"></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--cool-grey);margin-top:3px">
+              <span>0 SP</span><span style="color:var(--neon-blue);font-weight:600">120 vendidos</span><span style="color:#27ae60;font-weight:600">128 entregados ✓</span>
+            </div>
+          </div>
+          <div class="kpi-delta up">▲ 106.7% delivery rate — sobre lo comprometido</div>
+        </div>
+
+        <!-- Card 2: Eficiencia SP/RP — cuánto SP entregamos por RP ejecutado -->
+        <div class="kpi-card kpi-amethyst">
+          <div class="kpi-label">Eficiencia — SP entregado por RP ejecutado</div>
+          <div style="display:flex;align-items:baseline;gap:6px;margin:4px 0 2px">
+            <span class="kpi-value" style="color:var(--amethyst)">0.81</span>
+            <span style="font-size:14px;color:var(--cool-grey)">SP/RP</span>
+          </div>
+          <div class="kpi-sub">128 SP entregados ÷ 158 RP consumidos · Sprint 2</div>
+          <div style="background:#f5f3ff;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:11px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+              <span style="color:var(--cool-grey)">RP consumidos (costo real)</span>
+              <span style="font-weight:700;color:#1a1a2e">158 RP</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:var(--cool-grey)">SP entregados (valor al cliente)</span>
+              <span style="font-weight:700;color:var(--amethyst)">128 SP</span>
+            </div>
+          </div>
+          <div class="kpi-delta neutral">Meta: ≥ 0.85 SP/RP — levemente por debajo</div>
+          <div class="kpi-sparkline">
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar" style="height:80%"></div>
+            <div class="spark-bar" style="height:88%"></div>
+            <div class="spark-bar active" style="height:81%;background:var(--amethyst)"></div>
+          </div>
+        </div>
+
+        <!-- Card 3: Utilización desglosada billable / non-billable / sin asignar -->
+        <div class="kpi-card kpi-green">
+          <div class="kpi-label">Utilización — Billable · Non-billable · Sin asignar</div>
+          <div style="display:flex;align-items:baseline;gap:6px;margin:4px 0 6px">
+            <span class="kpi-value" style="color:#27ae60">71%</span>
+            <span style="font-size:13px;color:var(--cool-grey)">billable</span>
+          </div>
+          <!-- Stacked bar -->
+          <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin-bottom:6px">
+            <div style="width:71%;background:#27ae60" title="Billable 71%"></div>
+            <div style="width:16%;background:#f39c12" title="Non-billable 16%"></div>
+            <div style="width:13%;background:var(--light-silver)" title="Sin asignar 13%"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;font-size:11px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:8px;height:8px;border-radius:2px;background:#27ae60;flex-shrink:0"></span>
+              <span style="flex:1;color:var(--cool-grey)">Billable (proyectos cliente)</span>
+              <strong style="color:#27ae60">815 RP · 71%</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:8px;height:8px;border-radius:2px;background:#f39c12;flex-shrink:0"></span>
+              <span style="flex:1;color:var(--cool-grey)">Non-billable (interno, vacac.)</span>
+              <strong style="color:#f39c12">184 RP · 16%</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:8px;height:8px;border-radius:2px;background:var(--light-silver);flex-shrink:0"></span>
+              <span style="flex:1;color:var(--cool-grey)">Sin asignar (capacidad libre)</span>
+              <strong style="color:var(--cool-grey)">149 RP · 13%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpi-card kpi-amber">
+          <div class="kpi-label">GAP Demand (M3 vs POs)</div>
+          <div class="kpi-value">+142<span style="font-size:16px;color:var(--cool-grey)"> SP</span></div>
+          <div class="kpi-sub">RP Ejecutables − SP Contratados</div>
+          <div class="kpi-delta neutral">Capacidad disponible sin contrato</div>
+        </div>
+
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-label">Velocidad Sprint (promedio)</div>
+          <div class="kpi-value">96<span style="font-size:16px;color:var(--cool-grey)"> SP</span></div>
+          <div class="kpi-sub">SP entregados por sprint (últimos 3)</div>
+          <div class="kpi-delta up">▲ +8 SP vs sprint anterior</div>
+        </div>
+
+        <div class="kpi-card kpi-red">
+          <div class="kpi-label">Facturas vencidas</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-sub">Por $19,260 USD total</div>
+          <div class="kpi-delta down">▼ Requiere acción — cobros pendientes</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB: Performance financiera -->
+    <div id="tab-financial" class="tab-content">
+      <div class="row">
+        <div style="flex:2">
+          <div class="card">
+            <div class="card-title">Performance por proyecto (Mar 2026)</div>
+            <table>
+              <thead>
+                <tr><th>Proyecto</th><th>Facturado</th><th>Gasto Real</th><th>Performance</th><th>Margen %</th><th>Tendencia</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span style="font-family:'Courier New',monospace;font-size:11px;color:var(--neon-blue)">BNA-PAN-CLD-004</span></td>
+                  <td>$24,000</td>
+                  <td>$18,400</td>
+                  <td class="perf-positive">+$5,600</td>
+                  <td><span class="badge badge-green">23.3%</span></td>
+                  <td>📈</td>
+                </tr>
+                <tr>
+                  <td><span style="font-family:'Courier New',monospace;font-size:11px;color:var(--neon-blue)">BNA-PAN-CLD-003</span></td>
+                  <td>$18,000</td>
+                  <td>$14,200</td>
+                  <td class="perf-positive">+$3,800</td>
+                  <td><span class="badge badge-green">21.1%</span></td>
+                  <td>📊</td>
+                </tr>
+                <tr>
+                  <td><span style="font-family:'Courier New',monospace;font-size:11px;color:var(--neon-blue)">PQS-ARG-DAT-001</span></td>
+                  <td>ARS 720k (~$7,200)</td>
+                  <td>$9,160</td>
+                  <td class="perf-negative">-$1,960</td>
+                  <td><span class="badge badge-red">-27.2%</span></td>
+                  <td>📉</td>
+                </tr>
+                <tr>
+                  <td><span style="font-family:'Courier New',monospace;font-size:11px;color:var(--neon-blue)">TCI-USA-CLD-001</span></td>
+                  <td>$0 (Q1)</td>
+                  <td>$24,000</td>
+                  <td class="perf-negative">-$24,000</td>
+                  <td><span class="badge badge-amber">Setup fase</span></td>
+                  <td>—</td>
+                </tr>
+                <tr style="background:var(--bg);font-weight:700">
+                  <td><strong>TOTAL</strong></td>
+                  <td><strong>$84,000</strong></td>
+                  <td><strong>$65,760</strong></td>
+                  <td class="perf-positive">+$18,240</td>
+                  <td><span class="badge badge-green">21.7%</span></td>
+                  <td>📈</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="margin-top:12px;font-size:11px;color:var(--cool-grey)">
+              Gasto Real = Σ(TimeJuggle% × RP Capacity × Cost Rate) por colaborador × semana
+            </div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="card" style="height:100%">
+            <div class="card-title">Margen mensual 2026</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+              <div class="gauge-row">
+                <div class="gauge-label">Enero 2026</div>
+                <div class="gauge-track"><div class="gauge-fill" style="width:18%;background:var(--bleu-france)"></div></div>
+                <div class="gauge-val perf-positive">+$14k</div>
+              </div>
+              <div class="gauge-row">
+                <div class="gauge-label">Febrero 2026</div>
+                <div class="gauge-track"><div class="gauge-fill" style="width:20%;background:var(--bleu-france)"></div></div>
+                <div class="gauge-val perf-positive">+$16k</div>
+              </div>
+              <div class="gauge-row">
+                <div class="gauge-label" style="color:var(--neon-blue);font-weight:600">Marzo 2026</div>
+                <div class="gauge-track"><div class="gauge-fill" style="width:22%;background:var(--neon-blue)"></div></div>
+                <div class="gauge-val perf-positive">+$18k</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Capacidad & Utilización -->
+    <div id="tab-capacity" class="tab-content">
+      <!-- Resumen de utilización con stacked bar -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">Utilización global del equipo — Semana W12</div>
+        <div style="display:flex;gap:32px;align-items:flex-start">
+          <div style="flex:1">
+            <!-- Stacked bar grande -->
+            <div style="display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:10px;gap:2px">
+              <div style="width:71%;background:#27ae60;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700">71% Billable</div>
+              <div style="width:16%;background:#f39c12;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700">16%</div>
+              <div style="width:13%;background:var(--light-silver);display:flex;align-items:center;justify-content:center;color:var(--cool-grey);font-size:11px;font-weight:700">13%</div>
+            </div>
+            <div style="display:flex;gap:20px;font-size:12px">
+              <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#27ae60"></span><span>Billable — <strong>815 RP</strong> (proyectos cliente)</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#f39c12"></span><span>Non-billable — <strong>184 RP</strong> (interno, vacac., capac.)</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:var(--light-silver)"></span><span>Sin asignar — <strong>149 RP</strong></span></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;flex-shrink:0">
+            <div style="text-align:center;padding:12px 16px;background:var(--bg);border-radius:8px">
+              <div style="font-size:22px;font-weight:800;font-family:'Inter',sans-serif;color:#27ae60">71%</div>
+              <div style="font-size:10px;color:var(--cool-grey);font-weight:600;text-transform:uppercase">Billable</div>
+            </div>
+            <div style="text-align:center;padding:12px 16px;background:var(--bg);border-radius:8px">
+              <div style="font-size:22px;font-weight:800;font-family:'Inter',sans-serif;color:#f39c12">16%</div>
+              <div style="font-size:10px;color:var(--cool-grey);font-weight:600;text-transform:uppercase">Non-billable</div>
+            </div>
+            <div style="text-align:center;padding:12px 16px;background:var(--bg);border-radius:8px">
+              <div style="font-size:22px;font-weight:800;font-family:'Inter',sans-serif;color:var(--cool-grey)">13%</div>
+              <div style="font-size:10px;color:var(--cool-grey);font-weight:600;text-transform:uppercase">Sin asignar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card stat-accent-blue">
+          <div class="stat-label">RP total disponible</div>
+          <div class="stat-value">1,148</div>
+          <div class="stat-delta neutral">pts/quincena · 41 colaboradores</div>
+        </div>
+        <div class="stat-card stat-accent-sky">
+          <div class="stat-label">RP billable asignado</div>
+          <div class="stat-value" style="color:#27ae60">815</div>
+          <div class="stat-delta up">▲ +47 vs quincena anterior</div>
+        </div>
+        <div class="stat-card stat-accent-amethyst">
+          <div class="stat-label">RP non-billable</div>
+          <div class="stat-value" style="color:#f39c12">184</div>
+          <div class="stat-delta neutral">Interno + vacac. + capac.</div>
+        </div>
+        <div class="stat-card stat-accent-ocean">
+          <div class="stat-label">RP sin asignar (libre)</div>
+          <div class="stat-value" style="color:var(--cool-grey)">149</div>
+          <div class="stat-delta neutral">Capacidad vendible disponible</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Utilización por colaborador — billable vs non-billable vs libre (W12)</div>
+        <table>
+          <thead>
+            <tr><th>Colaborador</th><th>RP disponible</th><th>Billable</th><th>Non-billable</th><th>Sin asignar</th><th>% Billable</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Alejandro García</strong> <span class="badge badge-blue" style="font-size:10px">Senior</span></td>
+              <td>32 RP</td>
+              <td><span style="color:#27ae60;font-weight:600">32 RP</span></td>
+              <td>0</td>
+              <td>0</td>
+              <td><span class="badge badge-green">100%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Juan Torres</strong> <span class="badge badge-blue" style="font-size:10px">Senior</span></td>
+              <td>32 RP</td>
+              <td><span style="color:#27ae60;font-weight:600">20 RP</span></td>
+              <td><span style="color:#f39c12;font-weight:600">4 RP interno</span></td>
+              <td><span style="color:var(--cool-grey)">8 RP ⚠️</span></td>
+              <td><span class="badge badge-amber">63%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Rosa López</strong> <span class="badge badge-grey" style="font-size:10px">Junior</span></td>
+              <td>16 RP</td>
+              <td><span style="color:#27ae60;font-weight:600">16 RP</span></td>
+              <td>0</td>
+              <td>0</td>
+              <td><span class="badge badge-green">100%</span></td>
+            </tr>
+            <tr>
+              <td><strong>María Pérez</strong> <span class="badge badge-sky" style="font-size:10px">Mid</span></td>
+              <td>24 RP</td>
+              <td>0</td>
+              <td><span style="color:#f39c12;font-weight:600">8 RP vacac.</span></td>
+              <td><span style="color:#e74c3c;font-weight:600">16 RP ✗</span></td>
+              <td><span class="badge badge-red">0%</span></td>
+            </tr>
+            <tr>
+              <td><strong>Andrea Vega</strong> <span class="badge badge-sky" style="font-size:10px">Mid</span></td>
+              <td>24 RP</td>
+              <td><span style="color:#27ae60;font-weight:600">20 RP</span></td>
+              <td><span style="color:#f39c12;font-weight:600">4 RP interno</span></td>
+              <td>0</td>
+              <td><span class="badge badge-green">83%</span></td>
+            </tr>
+            <tr style="opacity:0.55">
+              <td><strong>Carlos Soto</strong> <span class="badge badge-amber" style="font-size:10px">Licencia</span></td>
+              <td>32 RP</td>
+              <td>0</td>
+              <td><span style="color:#f39c12;font-weight:600">32 RP licencia</span></td>
+              <td>0</td>
+              <td><span class="badge badge-grey">0%</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: Entrega & Velocidad -->
+    <div id="tab-delivery" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card stat-accent-blue">
+          <div class="stat-label">SP entregados (acum. 2026)</div>
+          <div class="stat-value">248</div>
+          <div class="stat-delta up">▲ On track</div>
+        </div>
+        <div class="stat-card stat-accent-sky">
+          <div class="stat-label">Velocidad promedio sprint</div>
+          <div class="stat-value">96</div>
+          <div class="stat-delta neutral">SP por sprint (4 semanas)</div>
+        </div>
+        <div class="stat-card stat-accent-amethyst">
+          <div class="stat-label">Commitment rate (Sprint 3)</div>
+          <div class="stat-value">35%</div>
+          <div class="stat-delta neutral">Sprint en curso (11 días restantes)</div>
+        </div>
+        <div class="stat-card stat-accent-ocean">
+          <div class="stat-label">Proyectos on-time</div>
+          <div class="stat-value">2/3</div>
+          <div class="stat-delta down">1 proyecto con riesgo de delay</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Historial de sprints — Velocidad SP entregados</div>
+        <table>
+          <thead><tr><th>Sprint</th><th>Proyecto</th><th>SP Comprometidos</th><th>SP Entregados</th><th>Tasa completado</th><th>ER planificados</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr><td>Sprint 1</td><td>BNA-004</td><td>80</td><td>80</td><td><span class="badge badge-green">100%</span></td><td>1,280</td><td><span class="badge badge-grey">Cerrado</span></td></tr>
+            <tr><td>Sprint 2</td><td>BNA-004</td><td>120</td><td>112</td><td><span class="badge badge-sky">93%</span></td><td>1,920</td><td><span class="badge badge-grey">Cerrado</span></td></tr>
+            <tr style="background:#f6f8ff"><td><strong>Sprint 3</strong></td><td><strong>BNA-004</strong></td><td>160</td><td>56 (en curso)</td><td><span class="badge badge-amber">35%</span></td><td>2,400</td><td><span class="badge badge-sky">En curso</span></td></tr>
+            <tr><td>Sprint 1</td><td>PQS-001</td><td>60</td><td>52</td><td><span class="badge badge-sky">87%</span></td><td>960</td><td><span class="badge badge-grey">Cerrado</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
