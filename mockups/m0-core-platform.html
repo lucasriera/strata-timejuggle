@@ -484,6 +484,16 @@ function showTab(tabName) {
     if (i === ['users','catalogs','audit','notifications'].indexOf(tabName)) el.classList.add('active');
   });
 }
+
+// On load: check ?tab= param, skip login overlay if navigating from another module
+window.addEventListener('DOMContentLoaded', function() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  if (tab && ['users','catalogs','audit','notifications'].includes(tab)) {
+    document.getElementById('loginScreen').classList.add('hidden');
+    showTab(tab);
+  }
+});
 </script>
 
 </body>
